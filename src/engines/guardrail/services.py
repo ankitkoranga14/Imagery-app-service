@@ -2,6 +2,7 @@ import time
 import re
 import base64
 import io
+import asyncio
 import torch
 from PIL import Image
 from typing import Dict, Optional, List, Any
@@ -18,6 +19,12 @@ class TextGuardrailService:
         self.food_categories = ["pizza", "burger", "cake", "sushi", "salad", "pasta", "fruit", "vegetable", "meal", "dish"]
         self.food_embeddings = None
     
+    def _precompute_food_embeddings(self):
+        """Pre-compute food category embeddings for faster validation."""
+        if self.food_embeddings is None:
+            model = self.ml_repo.get_text_model()
+            self.food_embeddings = model.encode(self.food_categories, convert_to_tensor=True)
+    
     async def check_injection(self, prompt: str) -> Dict[str, Any]:
         score = 0.0
         for pattern in self.injection_patterns:
@@ -33,7 +40,8 @@ class TextGuardrailService:
                 score += 0.5
         return {"policy_score": min(score, 1.0)}
     
-    async def check_food_domain(self, prompt: str) -> Dict[str, Any]:
+    def _sync_check_food_domain(self, prompt: str) -> Dict[str, Any]:
+        """Synchronous food domain check - to be run in thread pool."""
         model = self.ml_repo.get_text_model()
         prompt_emb = model.encode(prompt, convert_to_tensor=True)
         if self.food_embeddings is None:
@@ -41,13 +49,29 @@ class TextGuardrailService:
         similarities = util.cos_sim(prompt_emb, self.food_embeddings)
         max_similarity = float(similarities.max())
         return {"food_domain_score": max_similarity, "is_food_related": max_similarity > 0.35}
+    
+    async def check_food_domain(self, prompt: str) -> Dict[str, Any]:
+        """Check if prompt is food-related using sentence embeddings.
+        
+        Runs ML inference in thread pool to avoid blocking the event loop.
+        """
+        return await asyncio.to_thread(self._sync_check_food_domain, prompt)
 
 class ImageGuardrailService:
     def __init__(self, ml_repo: MLRepository):
         self.ml_repo = ml_repo
-        self.labels = ["a photo of food", "a photo of a person", "a photo of a non-food object", "an explicit or nsfw photo"]
+        # More descriptive labels for better contrast
+        self.labels = [
+            "a photo of food, a dish, or a meal",           # Food
+            "a photo of a person or human face",            # Person
+            "a photo of an animal, bird, or insect",        # Animal (e.g. Peacock)
+            "a photo of nature, plants, or landscape",      # Nature
+            "a photo of an object, tool, or technology",    # Object
+            "an explicit, nsfw, or suggestive photo"        # NSFW
+        ]
     
-    async def check_food_nsfw_clip(self, image_base64: str) -> Dict[str, Any]:
+    def _sync_check_food_nsfw_clip(self, image_base64: str) -> Dict[str, Any]:
+        """Synchronous CLIP check - to be run in thread pool."""
         try:
             # Decode image
             image_data = base64.b64decode(image_base64)
@@ -73,14 +97,29 @@ class ImageGuardrailService:
                 probs = (100.0 * image_features @ text_features.T).softmax(dim=-1)
                 probs = probs.cpu().numpy()[0]
             
+            # Logic: Food score must be the highest AND above a threshold
+            food_score = float(probs[0])
+            nsfw_score = float(probs[5])
+            
+            # Find the index of the highest probability
+            max_idx = probs.argmax()
+            
             return {
-                "food_score": float(probs[0]),
-                "nsfw_score": float(probs[3]),
-                "is_food": probs[0] > 0.4,
-                "is_nsfw": probs[3] > 0.1
+                "food_score": food_score,
+                "nsfw_score": nsfw_score,
+                "top_category": self.labels[max_idx],
+                "is_food": max_idx == 0 and food_score > 0.35, # Must be top category and > 35%
+                "is_nsfw": nsfw_score > 0.15
             }
         except Exception as e:
             return {"error": str(e), "food_score": 0.0, "nsfw_score": 0.0}
+    
+    async def check_food_nsfw_clip(self, image_base64: str) -> Dict[str, Any]:
+        """Check image for food/NSFW content using CLIP.
+        
+        Runs ML inference in thread pool to avoid blocking the event loop.
+        """
+        return await asyncio.to_thread(self._sync_check_food_nsfw_clip, image_base64)
 
 class GuardrailService:
     def __init__(self, ml_repo, cache_repo, log_repo, text_service, image_service):

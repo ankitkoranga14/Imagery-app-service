@@ -1,67 +1,166 @@
-# Architecture & Technical Documentation
+# Imagery Guardrail & Hybrid Pipeline - Architecture
 
-This document provides a deep dive into the technical implementation of the **Imagery Guardrail Service**.
+## Overview
 
-## 1. System Architecture
+A production-ready, scalable, and observable full-stack application for image processing with AI guardrails.
 
-The system is designed as a modular microservice following Clean Architecture principles.
-
-```mermaid
-graph TD
-    Client[Client / UI] --> API[FastAPI Gateway]
-    API --> Service[Guardrail Service]
-    Service --> Cache[Redis Cache]
-    Service --> ML[ML Repository]
-    Service --> DB[SQLAlchemy / SQLite]
-    
-    ML --> TextModel[Sentence-Transformers]
-    ML --> ImageModel[Open-CLIP]
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           FRONTEND (React + Tailwind)                        │
+│  ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────────────────┐ │
+│  │   Stepper   │ │   Metrics   │ │    Logs     │ │   Comparison Slider     │ │
+│  └─────────────┘ └─────────────┘ └─────────────┘ └─────────────────────────┘ │
+└────────────────────────────────────┬────────────────────────────────────────┘
+                                     │ HTTP/WebSocket
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           API LAYER (FastAPI)                                │
+│  ┌─────────────────────────────────────────────────────────────────────────┐ │
+│  │                    /api/v1/ Router (Versioned)                          │ │
+│  ├─────────────┬─────────────┬─────────────┬──────────────┬───────────────┤ │
+│  │  /guardrail │  /process   │  /status    │   /metrics   │    /logs      │ │
+│  │   (sync)    │  (dispatch) │  (polling)  │ (prometheus) │   (stream)    │ │
+│  └─────────────┴─────────────┴─────────────┴──────────────┴───────────────┘ │
+│                                     │                                        │
+│  ┌─────────────────────────────────┴─────────────────────────────────────┐  │
+│  │                     Global Exception Handler                          │  │
+│  │              Structured Logging (structlog → JSON)                    │  │
+│  └───────────────────────────────────────────────────────────────────────┘  │
+└────────────────────────────────────┬────────────────────────────────────────┘
+                                     │
+           ┌─────────────────────────┼─────────────────────────┐
+           ▼                         ▼                         ▼
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────────────┐
+│   Redis Queue   │     │    PostgreSQL   │     │   Storage Abstraction   │
+│   (Celery)      │     │    (SQLModel)   │     │  ┌─────────────────────┐│
+│                 │     │                 │     │  │    IStorage         ││
+│  - default      │     │  - ImageJob     │     │  ├─────────────────────┤│
+│  - gpu_queue    │     │  - GuardrailLog │     │  │  LocalStorage  ────►││
+│  - api_queue    │     │  - Users        │     │  │  AzureBlobStorage   ││
+└────────┬────────┘     └─────────────────┘     │  └─────────────────────┘│
+         │                                       └─────────────────────────┘
+         ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        CELERY WORKER PIPELINE                                │
+│                                                                              │
+│   ┌──────────┐      ┌──────────────┐      ┌──────────────┐                  │
+│   │  Stage 1 │ ───► │   Stage 2    │ ───► │   Stage 3    │                  │
+│   │  REMBG   │      │  REALESRGAN  │      │ NANO BANANA  │                  │
+│   │  (GPU)   │      │  (GPU/Tiled) │      │  (HTTP API)  │                  │
+│   └──────────┘      └──────────────┘      └──────────────┘                  │
+│        │                   │                     │                           │
+│        ▼                   ▼                     ▼                           │
+│   Circuit Breaker    Circuit Breaker      Exponential Backoff               │
+│   OOM Handling       VRAM Management      Retry on 503                      │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Components:
-- **FastAPI Gateway**: Handles HTTP requests, validation, and routing.
-- **Guardrail Service**: The core orchestrator that coordinates text and image validation.
-- **ML Repository**: Manages model loading (lazy loading) and inference.
-- **Cache Repository**: Handles SHA-256 hashing of inputs and Redis interaction.
-- **Log Repository**: Persists every decision for future analysis and training.
+## API Versioning Strategy
 
-## 2. Validation Logic
+All endpoints are versioned under `/api/v1/`:
 
-### Text Validation
-- **Injection Detection**: Uses regex patterns to identify common prompt injection attacks (e.g., "ignore previous instructions").
-- **Policy Check**: Scans for denylisted terms related to NSFW, violence, and hate speech.
-- **Domain Relevance**: Uses `all-MiniLM-L6-v2` to compute cosine similarity between the input prompt and a set of "Food" category embeddings.
+```
+app/api/v1/endpoints/process.py  →  POST /api/v1/process
+app/api/v1/endpoints/status.py   →  GET  /api/v1/status/{job_id}
+app/api/v1/endpoints/guardrail.py → POST /api/v1/guardrail/validate
+app/api/v1/endpoints/metrics.py  →  GET  /api/v1/metrics
+```
 
-### Image Validation
-- **CLIP Analysis**: Uses `ViT-B-32` to perform zero-shot classification.
-- **NSFW Detection**: Compares image features against an "explicit/nsfw" text label.
-- **Food Detection**: Compares image features against a "photo of food" label.
+## Storage Abstraction (The Bridge Pattern)
 
-## 3. Performance Optimizations
+```python
+def get_storage():
+    if settings.ENV == "PROD":
+        return AzureBlobStorage(connection_string=settings.AZURE_STR)
+    return LocalStorage(path="./data")
+```
 
-### Lazy Model Loading
-To prevent slow startup times and potential OOM (Out of Memory) errors in containerized environments, models are not loaded during the application's `lifespan` startup. Instead:
-1. The service starts instantly.
-2. On the first request, the `MLRepository` initializes the models.
-3. Models are kept in memory for subsequent requests.
+This means your code is **100% ready for Azure today**. When you're ready to move from local storage to the cloud, you simply change the `ENV` variable to `PROD` and provide the connection string. **No code changes required.**
 
-### Result Caching
-Every unique combination of `prompt` and `image` is hashed. If a match is found in Redis, the system returns the cached result immediately, bypassing the expensive ML inference step.
+## Pipeline Stages
 
-## 4. Database Schema
+### Stage 1: Background Removal (Rembg)
+- GPU-accelerated background removal
+- Circuit breaker for OOM protection
+- Transparent PNG output
 
-The system uses a simple but effective schema for logging:
+### Stage 2: 4K Tiled Upscaling (RealESRGAN)
+- Tiled processing for VRAM management (512px tiles)
+- 4x upscaling (512px → 2048px)
+- Automatic FP16 on GPU
 
-- **GuardrailLog**:
-  - `id`: Unique identifier.
-  - `prompt`: The input text.
-  - `status`: PASS or BLOCK.
-  - `reasons`: Comma-separated list of violation reasons.
-  - `processing_time_ms`: Latency of the request.
-  - `created_at`: Timestamp.
+### Stage 3: Smart Placement (Nano Banana API)
+- External API integration ($0.08/image)
+- Exponential backoff on 503 errors
+- Circuit breaker protection
 
-## 5. Production Deployment Considerations
+## Structured Logging
 
-- **GPU Acceleration**: While the current setup runs on CPU, the `MLRepository` is designed to automatically use `cuda` if a GPU is available.
-- **Scalability**: The service is stateless (aside from the cache/DB), allowing it to be scaled horizontally behind a load balancer.
-- **Monitoring**: Logs are formatted for easy ingestion by ELK or Prometheus/Grafana.
+Every log includes `job_id`, `version`, and `stage`:
+
+```json
+{
+  "timestamp": "2024-05-20T10:00:00Z",
+  "level": "info",
+  "event": "stage_completed",
+  "stage": "realesrgan",
+  "job_id": "550e8400-e29b-41d4-a716-446655440000",
+  "duration_ms": 4200,
+  "vram_used_gb": 4.2
+}
+```
+
+## Error Handling Flow
+
+The system implements a **State Machine**. If the "Rembg" stage fails:
+1. The task catches the exception
+2. Updates the SQL database with the error message
+3. Stops the $0.08 Nano Banana call from ever happening
+4. Saves money on failed runs
+
+```python
+try:
+    result = process_rembg(image)
+except GPUMemoryError:
+    update_job_status(job_id, "FAILED", stage="rembg")
+    circuit_breaker.record_failure()
+    # Nano Banana is never called - no cost incurred
+```
+
+## Prometheus Metrics
+
+Available at `/api/v1/metrics`:
+
+- `pipeline_latency_seconds` (per stage)
+- `nano_banana_api_calls_total`
+- `gpu_vram_usage_gauge`
+- `guardrail_validations_total`
+- `imagery_jobs_total`
+
+## Docker Compose Services
+
+| Service | Description | Port |
+|---------|-------------|------|
+| api | FastAPI application | 8000 |
+| worker | Celery CPU worker | - |
+| worker-gpu | Celery GPU worker | - |
+| redis | Message broker | 6379 |
+| frontend | React dashboard | 3000 |
+| flower | Celery monitoring | 5555 |
+
+## Quick Start
+
+```bash
+# Development
+docker-compose up
+
+# With GPU worker
+docker-compose --profile gpu up
+
+# With monitoring (Flower)
+docker-compose --profile monitoring up
+```
+
+## Environment Variables
+
+See `.env.example` for all configuration options.

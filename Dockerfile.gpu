@@ -1,0 +1,60 @@
+# =============================================================================
+# GPU Dockerfile for Celery Worker
+# =============================================================================
+# 
+# This Dockerfile builds a GPU-enabled worker for processing:
+# - RealESRGAN (4K upscaling)
+# - Rembg (background removal)
+#
+# Build: docker build -f Dockerfile.gpu -t imagery-worker-gpu .
+# =============================================================================
+
+FROM nvidia/cuda:12.1-cudnn8-runtime-ubuntu22.04
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.11 \
+    python3.11-dev \
+    python3-pip \
+    build-essential \
+    curl \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -s /usr/bin/python3.11 /usr/bin/python
+
+WORKDIR /app
+
+# Install Python dependencies
+COPY requirements.txt requirements-gpu.txt ./
+
+# Install PyTorch with CUDA support first
+RUN pip install --no-cache-dir \
+    torch==2.1.0+cu121 \
+    torchvision==0.16.0+cu121 \
+    --extra-index-url https://download.pytorch.org/whl/cu121
+
+# Install other requirements
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install GPU-specific packages
+RUN pip install --no-cache-dir -r requirements-gpu.txt || true
+
+# Copy application code
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p ml_cache data/storage
+
+# Default command for GPU worker
+CMD ["celery", "-A", "src.core.celery_app", "worker", "--loglevel=info", "--concurrency=1", "-Q", "gpu_queue"]
+

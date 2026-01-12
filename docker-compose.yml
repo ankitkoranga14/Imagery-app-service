@@ -1,32 +1,152 @@
+# =============================================================================
+# Imagery Guardrail & Hybrid Pipeline - Docker Compose
+# =============================================================================
+
+version: '3.8'
+
 services:
-  guardrail:
-    build: .
+  # API Service - FastAPI Application
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: imagery-api
     ports:
       - "8000:8000"
     environment:
+      - ENVIRONMENT=development
       - REDIS_URL=redis://redis:6379/1
-      - ENVIRONMENT=production
-    command: gunicorn -k uvicorn.workers.UvicornWorker -w 1 --timeout 300 -b 0.0.0.0:8000 src.main:app
+      - DATABASE_URL=sqlite+aiosqlite:///./data/imagery.db
+      - LOG_LEVEL=INFO
+      - LOG_FORMAT_JSON=true
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:8000
+    command: gunicorn -k uvicorn.workers.UvicornWorker -w 2 --timeout 300 -b 0.0.0.0:8000 src.main:app
     volumes:
       - ./ml_cache:/app/ml_cache
+      - ./data:/app/data
       - ./food-guard-ui/dist:/app/food-guard-ui/dist
     depends_on:
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - imagery-network
 
-  guardrail-ui:
-    build: ./food-guard-ui
+  # Celery Worker - CPU Tasks
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: imagery-worker
+    environment:
+      - ENVIRONMENT=development
+      - REDIS_URL=redis://redis:6379/1
+      - DATABASE_URL=sqlite+aiosqlite:///./data/imagery.db
+      - LOG_LEVEL=INFO
+    command: celery -A src.core.celery_app worker --loglevel=info --concurrency=2 -Q default,api_queue
+    volumes:
+      - ./ml_cache:/app/ml_cache
+      - ./data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - imagery-network
+
+  # Celery Worker - GPU Tasks (Optional Profile)
+  worker-gpu:
+    build:
+      context: .
+      dockerfile: Dockerfile.gpu
+    container_name: imagery-worker-gpu
+    profiles:
+      - gpu
+    environment:
+      - ENVIRONMENT=development
+      - REDIS_URL=redis://redis:6379/1
+      - DATABASE_URL=sqlite+aiosqlite:///./data/imagery.db
+      - NVIDIA_VISIBLE_DEVICES=all
+    command: celery -A src.core.celery_app worker --loglevel=info --concurrency=1 -Q gpu_queue
+    volumes:
+      - ./ml_cache:/app/ml_cache
+      - ./data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+    networks:
+      - imagery-network
+
+  # Redis - Message Broker & Cache
+  redis:
+    image: redis:7-alpine
+    container_name: imagery-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - imagery-network
+
+  # Frontend - React Dashboard
+  frontend:
+    build:
+      context: ./food-guard-ui
+      dockerfile: Dockerfile
+    container_name: imagery-frontend
     ports:
       - "3000:80"
     environment:
       - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - api
+    restart: unless-stopped
+    networks:
+      - imagery-network
 
-  redis:
-    image: redis:7-alpine
+  # Flower - Celery Monitoring (Optional)
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: imagery-flower
+    profiles:
+      - monitoring
     ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/1
+    command: celery -A src.core.celery_app flower --port=5555
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - imagery-network
+
+networks:
+  imagery-network:
+    driver: bridge
+
+volumes:
+  redis-data:

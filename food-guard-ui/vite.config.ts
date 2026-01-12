@@ -4,7 +4,7 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 import path from 'path';
 
 export default defineConfig({
-    base: '/ui/',
+    base: '/',
     plugins: [react(), tsconfigPaths()],
     resolve: {
         alias: {

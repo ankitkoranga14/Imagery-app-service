@@ -1,0 +1,14 @@
+# GPU-specific dependencies for worker
+# Install these in addition to requirements.txt
+
+# Background Removal
+rembg[gpu]==2.0.50
+
+# Real-ESRGAN for 4K upscaling
+basicsr>=1.4.2
+realesrgan>=0.3.0
+
+# Additional GPU utilities
+numpy>=1.24.0
+opencv-python-headless>=4.8.0
+
