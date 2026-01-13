@@ -12,17 +12,22 @@ from typing import Optional, Dict, Any
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.core.database import get_session
 from src.core.storage import get_storage, IStorage
+from src.core.config import settings
 from src.core.logging import get_logger, set_job_context, LogContext
 from src.core.metrics import record_job_completion
 from src.engines.guardrail.schemas import GuardrailRequestDTO
 from src.engines.guardrail.services import GuardrailService
 from src.api.dependencies import get_guardrail_service
 from src.modules.imagery.models import ImageJob, JobStatus, PipelineStage, StageStatus
+
+# Constants for file size limits
+MAX_IMAGE_SIZE_BYTES = settings.MAX_IMAGE_SIZE_BYTES  # 10MB from config
+MAX_IMAGE_SIZE_MB = MAX_IMAGE_SIZE_BYTES / (1024 * 1024)
 
 logger = get_logger(__name__)
 router = APIRouter()
@@ -40,6 +45,21 @@ class ProcessRequest(BaseModel):
         default=None,
         description="Pipeline options: {simulate: bool, scale: int, placement: {...}}"
     )
+    
+    @field_validator('image_base64')
+    @classmethod
+    def validate_image_size(cls, v: str) -> str:
+        """Validate that the base64 image doesn't exceed the maximum size."""
+        # Calculate approximate decoded size (base64 is ~33% larger than binary)
+        decoded_size_bytes = len(v) * 3 / 4
+        
+        if decoded_size_bytes > MAX_IMAGE_SIZE_BYTES:
+            actual_size_mb = decoded_size_bytes / (1024 * 1024)
+            raise ValueError(
+                f"Image size ({actual_size_mb:.2f}MB) exceeds maximum allowed size ({MAX_IMAGE_SIZE_MB:.0f}MB). "
+                f"Please compress or resize your image."
+            )
+        return v
 
 
 class ProcessResponse(BaseModel):
@@ -94,8 +114,17 @@ async def process_image(
     # Generate job ID
     job_id = str(uuid.uuid4())
     
+    # Calculate image size for logging
+    image_size_bytes = len(request.image_base64) * 3 / 4  # Approximate decoded size
+    image_size_mb = image_size_bytes / (1024 * 1024)
+    
     with LogContext(job_id=job_id, stage="validation"):
-        logger.info("process_request_received", prompt_length=len(request.prompt))
+        logger.info(
+            "process_request_received", 
+            prompt_length=len(request.prompt),
+            image_size_mb=round(image_size_mb, 2),
+            max_allowed_mb=MAX_IMAGE_SIZE_MB
+        )
         
         # Create job record
         job = ImageJob(
@@ -153,7 +182,8 @@ async def process_image(
                     guardrail={
                         "status": "BLOCK",
                         "reasons": guardrail_result.reasons,
-                        "scores": guardrail_result.scores
+                        "scores": guardrail_result.scores,
+                        "metadata": guardrail_result.metadata
                     },
                     estimated_cost_usd=0.0,
                     estimated_time_seconds=0

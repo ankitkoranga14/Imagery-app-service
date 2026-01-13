@@ -37,11 +37,7 @@ export interface JobStatusResponse {
     current_stage?: string;
     stages: StageProgress[];
     storage_urls?: StorageUrls;
-    guardrail?: {
-        status: string;
-        reasons: string[];
-        scores: Record<string, number>;
-    };
+    guardrail?: GuardrailResult;
     error?: {
         message: string;
         stage: string;
@@ -62,15 +58,36 @@ export interface ProcessRequest {
     };
 }
 
+export interface ValidationTrace {
+    levels_executed: string[];
+    levels_passed: string[];
+    levels_failed: string[];
+    levels_skipped: string[];
+    timings: Record<string, number>;
+    detected_foods?: Array<{
+        class_id: number;
+        class_name: string;
+        confidence: number;
+        bbox?: number[];
+    }>;
+}
+
+export interface GuardrailResult {
+    status: string;
+    reasons?: string[];
+    scores?: Record<string, number>;
+    metadata?: {
+        processing_time_ms: number;
+        cache_hit: boolean;
+        validation_trace?: ValidationTrace;
+    };
+}
+
 export interface ProcessResponse {
     job_id: string;
     status: string;
     message: string;
-    guardrail?: {
-        status: string;
-        reasons?: string[];
-        scores?: Record<string, number>;
-    };
+    guardrail?: GuardrailResult;
     estimated_cost_usd: number;
     estimated_time_seconds: number;
 }

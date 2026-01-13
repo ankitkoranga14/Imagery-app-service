@@ -27,7 +27,7 @@ import { pipelineApi } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import type { JobStatusResponse, StageProgress, LogEntry } from '@/lib/types';
+import type { JobStatusResponse, StageProgress, LogEntry, GuardrailResult } from '@/lib/types';
 
 // =============================================================================
 // Pipeline Stage Configuration (matching Imagery Board PDF flow)
@@ -461,7 +461,7 @@ function LogsTerminal({ jobId, isPolling, stages }: LogsTerminalProps) {
                                                 ${log.cost_usd}
                                             </span>
                                         )}
-                                        {log.vram_used_gb && (
+                                        {log.vram_used_gb && typeof log.vram_used_gb === 'number' && (
                                             <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 text-[10px]">
                                                 {log.vram_used_gb.toFixed(2)}GB
                                             </span>
@@ -556,6 +556,285 @@ function StageDetailsPanel({ stages }: StageDetailsPanelProps) {
                         );
                     })}
                 </div>
+            </CardContent>
+        </Card>
+    );
+}
+
+// =============================================================================
+// Guardrail Details Panel - Shows detailed validation information
+// =============================================================================
+
+interface GuardrailDetailsPanelProps {
+    guardrail?: GuardrailResult;
+    isBlocked: boolean;
+}
+
+function GuardrailDetailsPanel({ guardrail, isBlocked }: GuardrailDetailsPanelProps) {
+    if (!guardrail) return null;
+
+    const trace = guardrail.metadata?.validation_trace;
+    const scores = guardrail.scores || {};
+    const reasons = guardrail.reasons || [];
+    
+    // Safely extract trace arrays with defaults
+    const levelsExecuted = trace?.levels_executed || [];
+    const levelsPassed = trace?.levels_passed || [];
+    const levelsFailed = trace?.levels_failed || [];
+    const levelsSkipped = trace?.levels_skipped || [];
+    const timings = trace?.timings || {};
+
+    // Score display configuration
+    const scoreConfig: Record<string, { label: string; unit: string; threshold?: number; inverse?: boolean }> = {
+        darkness_score: { label: 'Brightness', unit: '', threshold: 50, inverse: true },
+        glare_percentage: { label: 'Glare', unit: '%', threshold: 5 },
+        blur_variance: { label: 'Sharpness', unit: '', threshold: 100, inverse: true },
+        food_object_count: { label: 'Food Items', unit: '' },
+        distinct_dish_count: { label: 'Distinct Dishes', unit: '' },
+        food_score: { label: 'Food Confidence', unit: '%' },
+        nsfw_score: { label: 'NSFW Risk', unit: '%', threshold: 15 },
+        angle_quality_score: { label: 'Angle Quality', unit: '' },
+        foreign_object_probability: { label: 'Foreign Objects', unit: '%', threshold: 30 },
+    };
+
+    const formatScore = (key: string, value: unknown): string => {
+        // Handle non-numeric values safely
+        if (typeof value === 'boolean') {
+            return value ? 'Yes' : 'No';
+        }
+        if (typeof value !== 'number' || isNaN(value)) {
+            return String(value);
+        }
+        
+        const config = scoreConfig[key];
+        if (key.includes('percentage') || key.includes('probability') || (key.includes('score') && value <= 1)) {
+            return `${(value * 100).toFixed(1)}${config?.unit || '%'}`;
+        }
+        return `${value.toFixed(1)}${config?.unit || ''}`;
+    };
+
+    const getScoreStatus = (key: string, value: unknown): 'pass' | 'fail' | 'neutral' => {
+        // Handle non-numeric values - return neutral
+        if (typeof value !== 'number' || isNaN(value)) {
+            return 'neutral';
+        }
+        
+        const config = scoreConfig[key];
+        if (!config?.threshold) return 'neutral';
+        
+        if (config.inverse) {
+            return value < config.threshold ? 'fail' : 'pass';
+        }
+        return value > config.threshold / 100 ? 'fail' : 'pass';
+    };
+
+    const getLevelIcon = (level: string) => {
+        const icons: Record<string, React.ReactNode> = {
+            text: <Terminal className="w-3.5 h-3.5" />,
+            physics: <Zap className="w-3.5 h-3.5" />,
+            geometry: <ImageIcon className="w-3.5 h-3.5" />,
+            context: <Shield className="w-3.5 h-3.5" />,
+            context_advanced: <Sparkles className="w-3.5 h-3.5" />,
+        };
+        return icons[level] || <Activity className="w-3.5 h-3.5" />;
+    };
+
+    const getLevelLabel = (level: string) => {
+        const labels: Record<string, string> = {
+            text: 'Text Validation',
+            physics: 'Physics (OpenCV)',
+            geometry: 'Geometry (YOLO)',
+            context: 'Context (CLIP)',
+            context_advanced: 'Advanced Context',
+        };
+        return labels[level] || level;
+    };
+
+    return (
+        <Card className={`border ${isBlocked ? 'bg-red-950/20 border-red-900/50' : 'bg-emerald-950/20 border-emerald-900/50'}`}>
+            <CardHeader className="py-3 border-b border-zinc-800">
+                <CardTitle className="text-sm flex items-center gap-2">
+                    <Shield className={`w-4 h-4 ${isBlocked ? 'text-red-400' : 'text-emerald-400'}`} />
+                    Guardrail Validation Details
+                    <span className={`ml-auto px-2 py-0.5 rounded text-xs font-semibold ${
+                        isBlocked ? 'bg-red-500/20 text-red-400' : 'bg-emerald-500/20 text-emerald-400'
+                    }`}>
+                        {guardrail.status}
+                    </span>
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-4">
+                {/* Failure Reasons */}
+                {reasons.length > 0 && (
+                    <div className="space-y-2">
+                        <h4 className="text-xs font-semibold text-red-400 uppercase tracking-wide flex items-center gap-1.5">
+                            <XCircle className="w-3.5 h-3.5" />
+                            Blocking Reasons
+                        </h4>
+                        <div className="space-y-1.5">
+                            {reasons.map((reason, idx) => (
+                                <div 
+                                    key={idx}
+                                    className="flex items-start gap-2 p-2 rounded bg-red-950/30 border border-red-900/30"
+                                >
+                                    <AlertTriangle className="w-3.5 h-3.5 text-red-400 shrink-0 mt-0.5" />
+                                    <span className="text-xs text-red-300">{reason}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Validation Levels */}
+                {levelsExecuted.length > 0 && (
+                    <div className="space-y-2">
+                        <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wide flex items-center gap-1.5">
+                            <Activity className="w-3.5 h-3.5" />
+                            Validation Pipeline
+                        </h4>
+                        <div className="grid grid-cols-2 gap-2">
+                            {levelsExecuted.map((level) => {
+                                const isPassed = levelsPassed.includes(level);
+                                const isFailed = levelsFailed.includes(level);
+                                const isSkipped = levelsSkipped.includes(level);
+                                const timing = timings[`${level}_ms`] || timings[`${level}_validation_ms`];
+
+                                return (
+                                    <div 
+                                        key={level}
+                                        className={`
+                                            flex items-center gap-2 p-2 rounded border
+                                            ${isPassed ? 'bg-emerald-950/30 border-emerald-900/30' :
+                                              isFailed ? 'bg-red-950/30 border-red-900/30' :
+                                              isSkipped ? 'bg-zinc-800/30 border-zinc-700/30' :
+                                              'bg-zinc-800/30 border-zinc-700/30'}
+                                        `}
+                                    >
+                                        <div className={`p-1 rounded ${
+                                            isPassed ? 'bg-emerald-500/20' :
+                                            isFailed ? 'bg-red-500/20' :
+                                            'bg-zinc-700/50'
+                                        }`}>
+                                            {isPassed ? (
+                                                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                                            ) : isFailed ? (
+                                                <XCircle className="w-3 h-3 text-red-400" />
+                                            ) : (
+                                                getLevelIcon(level)
+                                            )}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className={`text-xs font-medium truncate ${
+                                                isPassed ? 'text-emerald-400' :
+                                                isFailed ? 'text-red-400' :
+                                                'text-zinc-500'
+                                            }`}>
+                                                {getLevelLabel(level)}
+                                            </p>
+                                        </div>
+                                        {timing && typeof timing === 'number' && (
+                                            <span className="text-[10px] font-mono text-zinc-500">
+                                                {timing.toFixed(0)}ms
+                                            </span>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                            {levelsSkipped.filter(l => !levelsExecuted.includes(l)).map((level) => (
+                                <div 
+                                    key={level}
+                                    className="flex items-center gap-2 p-2 rounded border bg-zinc-800/20 border-zinc-800/50 opacity-50"
+                                >
+                                    <div className="p-1 rounded bg-zinc-800">
+                                        {getLevelIcon(level)}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-medium text-zinc-600 truncate">
+                                            {getLevelLabel(level)}
+                                        </p>
+                                    </div>
+                                    <span className="text-[10px] text-zinc-600">SKIPPED</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Detailed Scores */}
+                {Object.keys(scores).length > 0 && (
+                    <div className="space-y-2">
+                        <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wide flex items-center gap-1.5">
+                            <Info className="w-3.5 h-3.5" />
+                            Validation Scores
+                        </h4>
+                        <div className="grid grid-cols-3 gap-2">
+                            {Object.entries(scores)
+                                .filter(([, value]) => typeof value === 'number' || typeof value === 'boolean')
+                                .map(([key, value]) => {
+                                const config = scoreConfig[key];
+                                const status = getScoreStatus(key, value);
+                                
+                                return (
+                                    <div 
+                                        key={key}
+                                        className={`
+                                            p-2 rounded border text-center
+                                            ${status === 'fail' ? 'bg-red-950/30 border-red-900/30' :
+                                              status === 'pass' ? 'bg-emerald-950/20 border-emerald-900/30' :
+                                              'bg-zinc-800/30 border-zinc-700/30'}
+                                        `}
+                                    >
+                                        <p className="text-[10px] text-zinc-500 uppercase truncate">
+                                            {config?.label || key.replace(/_/g, ' ')}
+                                        </p>
+                                        <p className={`text-sm font-mono font-bold ${
+                                            status === 'fail' ? 'text-red-400' :
+                                            status === 'pass' ? 'text-emerald-400' :
+                                            'text-white'
+                                        }`}>
+                                            {formatScore(key, value)}
+                                        </p>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+                {/* Detected Foods */}
+                {trace?.detected_foods && trace.detected_foods.length > 0 && (
+                    <div className="space-y-2">
+                        <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wide flex items-center gap-1.5">
+                            <ImageIcon className="w-3.5 h-3.5" />
+                            Detected Objects (YOLO)
+                        </h4>
+                        <div className="flex flex-wrap gap-1.5">
+                            {trace.detected_foods.map((food, idx) => (
+                                <span 
+                                    key={idx}
+                                    className="px-2 py-1 rounded bg-purple-500/10 border border-purple-500/20 text-xs text-purple-300"
+                                >
+                                    {food.class_name} ({typeof food.confidence === 'number' ? (food.confidence * 100).toFixed(0) : '?'}%)
+                                </span>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* Timing Summary */}
+                {guardrail.metadata?.processing_time_ms && (
+                    <div className="pt-2 border-t border-zinc-800 flex items-center justify-between text-xs">
+                        <span className="text-zinc-500">Total Processing Time</span>
+                        <span className="font-mono text-zinc-300">
+                            {guardrail.metadata.processing_time_ms}ms
+                        </span>
+                        {guardrail.metadata.cache_hit && (
+                            <span className="px-1.5 py-0.5 rounded bg-blue-500/10 text-blue-400 text-[10px]">
+                                CACHED
+                            </span>
+                        )}
+                    </div>
+                )}
             </CardContent>
         </Card>
     );
@@ -694,6 +973,18 @@ export function PipelineDashboard() {
     const [imageBase64, setImageBase64] = useState<string | null>(null);
     const [currentJobId, setCurrentJobId] = useState<string | null>(null);
     const [isPolling, setIsPolling] = useState(false);
+    const [guardrailResult, setGuardrailResult] = useState<GuardrailResult | null>(null);
+    const [imageSize, setImageSize] = useState<number | null>(null);
+    
+    // Max file size: 10MB
+    const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+    const MAX_FILE_SIZE_MB = 10;
+    
+    const formatFileSize = (bytes: number): string => {
+        if (bytes < 1024) return `${bytes} B`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+        return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+    };
 
     // Process mutation
     const processMutation = useMutation({
@@ -708,15 +999,32 @@ export function PipelineDashboard() {
             setCurrentJobId(jobId);
 
             if (response.data.status === 'BLOCKED') {
+                // Store guardrail result for detailed display
+                if (response.data.guardrail) {
+                    setGuardrailResult(response.data.guardrail);
+                }
                 toast.error(`Content blocked: ${response.data.message}`);
                 setIsPolling(false);
             } else {
+                setGuardrailResult(response.data.guardrail || null);
                 toast.success('Pipeline started!');
                 setIsPolling(true);
             }
         },
-        onError: (error: Error) => {
-            toast.error(`Failed to start pipeline: ${error.message}`);
+        onError: (error: Error & { response?: { status?: number; data?: { detail?: string } } }) => {
+            // Check for 413 Request Entity Too Large
+            if (error.response?.status === 413 || error.message.includes('413')) {
+                const actualSize = imageSize ? formatFileSize(imageSize) : 'unknown';
+                toast.error(
+                    `Image too large (${actualSize}). Maximum allowed: ${MAX_FILE_SIZE_MB}MB. Please compress or resize your image.`,
+                    { duration: 8000 }
+                );
+            } else if (error.response?.data?.detail) {
+                // Handle validation errors from backend
+                toast.error(error.response.data.detail, { duration: 6000 });
+            } else {
+                toast.error(`Failed to start pipeline: ${error.message}`);
+            }
         }
     });
 
@@ -746,9 +1054,36 @@ export function PipelineDashboard() {
     }, [jobStatus?.status]);
 
     // File drop handler
-    const onDrop = useCallback((acceptedFiles: File[]) => {
+    const onDrop = useCallback((acceptedFiles: File[], fileRejections: Array<{ file: File; errors: readonly { code: string; message: string }[] }>) => {
+        // Handle rejected files (too large, wrong type, etc.)
+        if (fileRejections.length > 0) {
+            const rejection = fileRejections[0];
+            const file = rejection.file;
+            const errors = rejection.errors;
+            
+            for (const error of errors) {
+                if (error.code === 'file-too-large') {
+                    toast.error(
+                        `Image too large: ${formatFileSize(file.size)}. Maximum allowed: ${MAX_FILE_SIZE_MB}MB. Please compress or resize your image.`,
+                        { duration: 6000 }
+                    );
+                } else if (error.code === 'file-invalid-type') {
+                    toast.error('Invalid file type. Please upload PNG, JPG, JPEG, or WEBP images.');
+                } else {
+                    toast.error(error.message);
+                }
+            }
+            return;
+        }
+        
         const file = acceptedFiles[0];
         if (!file) return;
+
+        // Store file size
+        setImageSize(file.size);
+        
+        // Log file size
+        console.log(`[Upload] File: ${file.name}, Size: ${formatFileSize(file.size)}, Max: ${MAX_FILE_SIZE_MB}MB`);
 
         // Preview
         const reader = new FileReader();
@@ -770,7 +1105,7 @@ export function PipelineDashboard() {
         onDrop,
         accept: { 'image/*': ['.png', '.jpg', '.jpeg', '.webp'] },
         maxFiles: 1,
-        maxSize: 10 * 1024 * 1024 // 10MB
+        maxSize: MAX_FILE_SIZE_BYTES
     });
 
     const handleSubmit = () => {
@@ -791,6 +1126,8 @@ export function PipelineDashboard() {
         setImageBase64(null);
         setCurrentJobId(null);
         setIsPolling(false);
+        setGuardrailResult(null);
+        setImageSize(null);
     };
 
     // Default stages for display
@@ -871,17 +1208,33 @@ export function PipelineDashboard() {
                             >
                                 <input {...getInputProps()} />
                                 {imagePreview ? (
-                                    <img
-                                        src={imagePreview}
-                                        alt="Preview"
-                                        className="max-h-40 mx-auto rounded-lg"
-                                    />
+                                    <div className="space-y-2">
+                                        <img
+                                            src={imagePreview}
+                                            alt="Preview"
+                                            className="max-h-40 mx-auto rounded-lg"
+                                        />
+                                        {imageSize && (
+                                            <div className="flex items-center justify-center gap-2 text-xs">
+                                                <span className={`px-2 py-0.5 rounded ${
+                                                    imageSize > MAX_FILE_SIZE_BYTES * 0.8 
+                                                        ? 'bg-amber-500/20 text-amber-400' 
+                                                        : 'bg-emerald-500/20 text-emerald-400'
+                                                }`}>
+                                                    {formatFileSize(imageSize)}
+                                                </span>
+                                                <span className="text-zinc-600">
+                                                    / {MAX_FILE_SIZE_MB}MB max
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
                                 ) : (
                                     <div className="text-zinc-400">
                                         <Upload className="w-10 h-10 mx-auto mb-3 opacity-50" />
                                         <p className="text-sm">Drop image here</p>
                                         <p className="text-xs text-zinc-600 mt-1">
-                                            PNG, JPG, WEBP up to 10MB
+                                            PNG, JPG, WEBP up to {MAX_FILE_SIZE_MB}MB
                                         </p>
                                     </div>
                                 )}
@@ -987,13 +1340,21 @@ export function PipelineDashboard() {
                     </CardContent>
                 </Card>
 
-                {/* Right: Logs Terminal */}
+                {/* Right: Logs Terminal & Guardrail Details */}
                 <div className="space-y-4">
                     <LogsTerminal 
                         jobId={currentJobId} 
                         isPolling={isPolling || !!currentJobId}
                         stages={currentStages}
                     />
+
+                    {/* Guardrail Details Panel */}
+                    {(guardrailResult || jobStatus?.guardrail) && (
+                        <GuardrailDetailsPanel 
+                            guardrail={guardrailResult || jobStatus?.guardrail}
+                            isBlocked={guardrailResult?.status === 'BLOCK' || jobStatus?.status === 'BLOCKED'}
+                        />
+                    )}
 
                     {/* Error display */}
                     {jobStatus?.error && (
