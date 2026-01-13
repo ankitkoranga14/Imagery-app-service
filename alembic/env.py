@@ -7,12 +7,17 @@ from dotenv import load_dotenv
 import os
 import sys
 
-# Add the project root to sys.path so we can import app
+# Add the project root to sys.path so we can import src
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Import your models
-from app.models import SQLModel
-from app.database import DATABASE_URL
+# Import your models - import all models to register them with SQLModel.metadata
+from sqlmodel import SQLModel
+from src.core.config import settings
+from src.modules.users.models import User
+from src.engines.guardrail.models import GuardrailLog, GuardrailFeedback, GuardrailConfigVariant
+from src.modules.imagery.models import ImageJob
+
+DATABASE_URL = settings.DATABASE_URL
 
 # Load environment variables
 load_dotenv()

@@ -87,6 +87,59 @@ guardrail_latency_seconds = Histogram(
     buckets=[0.01, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0]
 )
 
+# =============================================================================
+# Guardrail Model Performance Metrics (Phase 4 Optimization)
+# =============================================================================
+
+# Per-layer latency tracking
+guardrail_layer_latency_seconds = Histogram(
+    "guardrail_layer_latency_seconds",
+    "Time spent in each guardrail validation layer",
+    labelnames=["layer", "model_variant"],
+    buckets=[0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5]
+)
+
+# Model variant tracking for A/B testing
+guardrail_model_decisions = Counter(
+    "guardrail_model_decisions_total",
+    "Decision outcomes by model variant (for A/B testing)",
+    labelnames=["status", "reason", "clip_variant", "yolo_variant"]
+)
+
+# Confidence score distribution
+guardrail_confidence_histogram = Histogram(
+    "guardrail_confidence_score",
+    "Distribution of confidence scores by category",
+    labelnames=["category", "model_variant"],
+    buckets=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+)
+
+# Cache effectiveness
+guardrail_cache_hits = Counter(
+    "guardrail_cache_hits_total",
+    "Cache hit rate for guardrail validations"
+)
+
+guardrail_cache_misses = Counter(
+    "guardrail_cache_misses_total",
+    "Cache miss rate for guardrail validations"
+)
+
+# Parallel execution tracking
+guardrail_parallel_execution = Counter(
+    "guardrail_parallel_execution_total",
+    "Count of parallel vs sequential layer execution",
+    labelnames=["execution_mode"]  # "parallel" or "sequential"
+)
+
+# Model loading metrics
+guardrail_model_load_seconds = Histogram(
+    "guardrail_model_load_seconds",
+    "Time to load ML models",
+    labelnames=["model_type", "variant"],
+    buckets=[0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0]
+)
+
 # API Request Metrics
 http_requests_total = Counter(
     "http_requests_total",
@@ -234,6 +287,102 @@ def record_guardrail_validation(status: str, block_reason: str = "none"):
         status=status,
         block_reason=block_reason
     ).inc()
+
+
+def record_guardrail_layer_latency(
+    layer: str, 
+    latency_seconds: float, 
+    model_variant: str = "unknown"
+):
+    """Record latency for a specific guardrail layer.
+    
+    Args:
+        layer: Layer name (physics, geometry, context, context_advanced)
+        latency_seconds: Time spent in the layer
+        model_variant: Model variant used (mobileclip_s2, yolo11n, etc.)
+    """
+    guardrail_layer_latency_seconds.labels(
+        layer=layer,
+        model_variant=model_variant
+    ).observe(latency_seconds)
+
+
+def record_guardrail_model_decision(
+    status: str,
+    reason: str,
+    clip_variant: str = "unknown",
+    yolo_variant: str = "unknown"
+):
+    """Record decision outcome with model variant info for A/B testing.
+    
+    Args:
+        status: Decision status (PASS, BLOCK)
+        reason: Block reason or "pass"
+        clip_variant: CLIP model variant used
+        yolo_variant: YOLO model variant used
+    """
+    guardrail_model_decisions.labels(
+        status=status,
+        reason=reason,
+        clip_variant=clip_variant,
+        yolo_variant=yolo_variant
+    ).inc()
+
+
+def record_guardrail_confidence(
+    category: str,
+    confidence: float,
+    model_variant: str = "unknown"
+):
+    """Record confidence score distribution.
+    
+    Args:
+        category: Category type (food, nsfw, foreign_object, etc.)
+        confidence: Confidence score (0-1)
+        model_variant: Model variant used
+    """
+    guardrail_confidence_histogram.labels(
+        category=category,
+        model_variant=model_variant
+    ).observe(confidence)
+
+
+def record_guardrail_cache_hit():
+    """Record a cache hit for guardrail validation."""
+    guardrail_cache_hits.inc()
+
+
+def record_guardrail_cache_miss():
+    """Record a cache miss for guardrail validation."""
+    guardrail_cache_misses.inc()
+
+
+def record_guardrail_parallel_execution(is_parallel: bool):
+    """Record whether parallel or sequential execution was used.
+    
+    Args:
+        is_parallel: True if parallel execution, False if sequential
+    """
+    mode = "parallel" if is_parallel else "sequential"
+    guardrail_parallel_execution.labels(execution_mode=mode).inc()
+
+
+def record_model_load_time(
+    model_type: str,
+    variant: str,
+    load_time_seconds: float
+):
+    """Record model loading time.
+    
+    Args:
+        model_type: Type of model (clip, yolo, text)
+        variant: Model variant (mobileclip_s2, yolo11n, etc.)
+        load_time_seconds: Time to load the model
+    """
+    guardrail_model_load_seconds.labels(
+        model_type=model_type,
+        variant=variant
+    ).observe(load_time_seconds)
 
 
 def get_metrics() -> bytes:

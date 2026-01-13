@@ -1,21 +1,31 @@
 # =============================================================================
-# GPU Dockerfile for Celery Worker
+# GPU Dockerfile for Celery Worker (Optimized)
 # =============================================================================
 # 
 # This Dockerfile builds a GPU-enabled worker for processing:
 # - RealESRGAN (4K upscaling)
 # - Rembg (background removal)
+# - Guardrail ML models (CLIP, YOLO)
+#
+# Features:
+# - Pre-downloaded ML models (no download at runtime)
+# - Safetensors format for 4-7x faster weight loading
+# - CUDA 12.1 with cuDNN 8
 #
 # Build: docker build -f Dockerfile.gpu -t imagery-worker-gpu .
 # =============================================================================
 
-FROM nvidia/cuda:12.1-cudnn8-runtime-ubuntu22.04
+FROM nvidia/cuda:12.1-cudnn8-runtime-ubuntu22.04 AS base
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    # Model loading optimization
+    GUARDRAIL_PARALLEL_LOADING=true \
+    GUARDRAIL_BACKGROUND_LOADING=false \
+    ML_MODEL_CACHE_DIR=/app/ml_cache
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -34,7 +44,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Install Python dependencies
+# =============================================================================
+# Dependencies Stage
+# =============================================================================
+FROM base AS dependencies
+
+# Copy requirements
 COPY requirements.txt requirements-gpu.txt ./
 
 # Install PyTorch with CUDA support first
@@ -49,12 +64,48 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Install GPU-specific packages
 RUN pip install --no-cache-dir -r requirements-gpu.txt || true
 
+# =============================================================================
+# Model Download Stage
+# =============================================================================
+FROM dependencies AS model-downloader
+
+ARG PREDOWNLOAD_MODELS=true
+
+# Copy only what's needed for model download
+COPY src/ ./src/
+COPY scripts/ ./scripts/
+
+# Create cache directory
+RUN mkdir -p /app/ml_cache
+
+# Pre-download and optimize models (STANDARD configuration)
+RUN if [ "${PREDOWNLOAD_MODELS}" = "true" ]; then \
+        echo "Pre-downloading ML models (STANDARD configuration)..." && \
+        python scripts/setup_models.py \
+            --cache-dir /app/ml_cache && \
+        echo "Models downloaded successfully!" && \
+        du -sh /app/ml_cache; \
+    else \
+        echo "Skipping model pre-download"; \
+    fi
+
+# =============================================================================
+# Final Stage
+# =============================================================================
+FROM dependencies AS final
+
+# Copy pre-downloaded models
+COPY --from=model-downloader /app/ml_cache /app/ml_cache
+
 # Copy application code
 COPY . .
 
 # Create necessary directories
-RUN mkdir -p ml_cache data/storage
+RUN mkdir -p data/storage
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
 
 # Default command for GPU worker
 CMD ["celery", "-A", "src.core.celery_app", "worker", "--loglevel=info", "--concurrency=1", "-Q", "gpu_queue"]
-

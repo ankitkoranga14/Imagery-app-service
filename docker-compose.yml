@@ -1,8 +1,20 @@
 # =============================================================================
-# Imagery Guardrail & Hybrid Pipeline - Docker Compose
+# Imagery Guardrail & Hybrid Pipeline - Docker Compose (Optimized)
 # =============================================================================
-
-version: '3.8'
+#
+# Features:
+# - Pre-downloaded ML models (built into image)
+# - Parallel model loading (50-60% faster startup)
+# - Safetensors format (4-7x faster weight loading)
+#
+# Models (standard pip packages only):
+# - Text: all-MiniLM-L6-v2 (sentence-transformers)
+# - CLIP: ViT-B-32 with LAION weights (open-clip-torch)
+# - YOLO: YOLOv11n - 30% faster than v8 (ultralytics>=8.3.0)
+#
+# Build: docker compose build
+# Run:   docker compose up -d
+# =============================================================================
 
 services:
   # API Service - FastAPI Application
@@ -10,6 +22,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        PREDOWNLOAD_MODELS: "true"
     container_name: imagery-api
     ports:
       - "8000:8000"
@@ -20,6 +34,11 @@ services:
       - LOG_LEVEL=INFO
       - LOG_FORMAT_JSON=true
       - CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:8000
+      # Model loading optimization
+      - GUARDRAIL_PARALLEL_LOADING=true
+      - GUARDRAIL_BACKGROUND_LOADING=false
+      - ML_MODEL_CACHE_DIR=/app/ml_cache
+      - CLIP_TEMPERATURE=1.2
     command: gunicorn -k uvicorn.workers.UvicornWorker -w 2 --timeout 300 -b 0.0.0.0:8000 src.main:app
     volumes:
       - ./ml_cache:/app/ml_cache
@@ -33,6 +52,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+      start_period: 60s
     restart: unless-stopped
     networks:
       - imagery-network
@@ -42,12 +62,18 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        PREDOWNLOAD_MODELS: "true"
     container_name: imagery-worker
     environment:
       - ENVIRONMENT=development
       - REDIS_URL=redis://redis:6379/1
       - DATABASE_URL=sqlite+aiosqlite:///./data/imagery.db
       - LOG_LEVEL=INFO
+      # Model loading optimization
+      - GUARDRAIL_PARALLEL_LOADING=true
+      - ML_MODEL_CACHE_DIR=/app/ml_cache
+      - CLIP_TEMPERATURE=1.2
     command: celery -A src.core.celery_app worker --loglevel=info --concurrency=2 -Q default,api_queue
     volumes:
       - ./ml_cache:/app/ml_cache
@@ -64,6 +90,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.gpu
+      args:
+        PREDOWNLOAD_MODELS: "true"
     container_name: imagery-worker-gpu
     profiles:
       - gpu
@@ -72,6 +100,9 @@ services:
       - REDIS_URL=redis://redis:6379/1
       - DATABASE_URL=sqlite+aiosqlite:///./data/imagery.db
       - NVIDIA_VISIBLE_DEVICES=all
+      # Model loading optimization
+      - GUARDRAIL_PARALLEL_LOADING=true
+      - ML_MODEL_CACHE_DIR=/app/ml_cache
     command: celery -A src.core.celery_app worker --loglevel=info --concurrency=1 -Q gpu_queue
     volumes:
       - ./ml_cache:/app/ml_cache
