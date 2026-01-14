@@ -1,16 +1,21 @@
 # =============================================================================
-# Imagery Guardrail & Hybrid Pipeline - Docker Compose (Optimized)
+# Guardrail Microservice - Docker Compose
 # =============================================================================
 #
-# Features:
-# - Pre-downloaded ML models (built into image)
-# - Parallel model loading (50-60% faster startup)
-# - Safetensors format (4-7x faster weight loading)
+# Lean, production-ready validation service:
+# - api: FastAPI server for /validate endpoint
+# - worker: GPU-enabled Celery worker for ML inference
+# - redis: Celery broker + L0 cache
 #
-# Models (standard pip packages only):
+# Models (optimized for validation):
 # - Text: all-MiniLM-L6-v2 (sentence-transformers)
-# - CLIP: ViT-B-32 with LAION weights (open-clip-torch)
-# - YOLO: YOLOv11n - 30% faster than v8 (ultralytics>=8.3.0)
+# - CLIP: MobileCLIP2-S2 for fast image embeddings (open-clip-torch)
+# - YOLO: YOLOv11n for food detection (ultralytics>=8.3.0)
+#
+# Removed (no longer needed):
+# - rembg (background removal)
+# - RealESRGAN (upscaling)
+# - Nano Banana API integration
 #
 # Build: docker compose build
 # Run:   docker compose up -d
@@ -24,13 +29,13 @@ services:
       dockerfile: Dockerfile
       args:
         PREDOWNLOAD_MODELS: "true"
-    container_name: imagery-api
+    container_name: guardrail-api
     ports:
       - "8000:8000"
     environment:
       - ENVIRONMENT=development
       - REDIS_URL=redis://redis:6379/1
-      - DATABASE_URL=sqlite+aiosqlite:///./data/imagery.db
+      - DATABASE_URL=sqlite+aiosqlite:///./data/guardrail.db
       - LOG_LEVEL=INFO
       - LOG_FORMAT_JSON=true
       - CORS_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:8000
@@ -43,6 +48,7 @@ services:
     volumes:
       - ./ml_cache:/app/ml_cache
       - ./data:/app/data
+      - ./src:/app/src
       - ./food-guard-ui/dist:/app/food-guard-ui/dist
     depends_on:
       redis:
@@ -55,26 +61,26 @@ services:
       start_period: 60s
     restart: unless-stopped
     networks:
-      - imagery-network
+      - guardrail-network
 
-  # Celery Worker - CPU Tasks
+  # Celery Worker - GPU-enabled for ML inference
   worker:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.worker
       args:
         PREDOWNLOAD_MODELS: "true"
-    container_name: imagery-worker
+    container_name: guardrail-worker
     environment:
       - ENVIRONMENT=development
       - REDIS_URL=redis://redis:6379/1
-      - DATABASE_URL=sqlite+aiosqlite:///./data/imagery.db
+      - DATABASE_URL=sqlite+aiosqlite:///./data/guardrail.db
       - LOG_LEVEL=INFO
       # Model loading optimization
       - GUARDRAIL_PARALLEL_LOADING=true
       - ML_MODEL_CACHE_DIR=/app/ml_cache
       - CLIP_TEMPERATURE=1.2
-    command: celery -A src.core.celery_app worker --loglevel=info --concurrency=2 -Q default,api_queue
+    command: celery -A src.core.celery_app worker --loglevel=info --concurrency=2 -Q default,validation
     volumes:
       - ./ml_cache:/app/ml_cache
       - ./data:/app/data
@@ -83,27 +89,28 @@ services:
         condition: service_healthy
     restart: unless-stopped
     networks:
-      - imagery-network
+      - guardrail-network
 
-  # Celery Worker - GPU Tasks (Optional Profile)
+  # GPU Worker (Optional Profile) - 100% dedicated to YOLOv11 + CLIP
   worker-gpu:
     build:
       context: .
-      dockerfile: Dockerfile.gpu
+      dockerfile: Dockerfile.worker
       args:
         PREDOWNLOAD_MODELS: "true"
-    container_name: imagery-worker-gpu
+    container_name: guardrail-worker-gpu
     profiles:
       - gpu
     environment:
       - ENVIRONMENT=development
       - REDIS_URL=redis://redis:6379/1
-      - DATABASE_URL=sqlite+aiosqlite:///./data/imagery.db
+      - DATABASE_URL=sqlite+aiosqlite:///./data/guardrail.db
       - NVIDIA_VISIBLE_DEVICES=all
       # Model loading optimization
       - GUARDRAIL_PARALLEL_LOADING=true
       - ML_MODEL_CACHE_DIR=/app/ml_cache
-    command: celery -A src.core.celery_app worker --loglevel=info --concurrency=1 -Q gpu_queue
+      - CLIP_TEMPERATURE=1.2
+    command: celery -A src.core.celery_app worker --loglevel=info --concurrency=1 -Q gpu_queue,validation
     volumes:
       - ./ml_cache:/app/ml_cache
       - ./data:/app/data
@@ -119,12 +126,12 @@ services:
               capabilities: [gpu]
     restart: unless-stopped
     networks:
-      - imagery-network
+      - guardrail-network
 
-  # Redis - Message Broker & Cache
+  # Redis - Message Broker & L0 Cache
   redis:
     image: redis:7-alpine
-    container_name: imagery-redis
+    container_name: guardrail-redis
     ports:
       - "6379:6379"
     volumes:
@@ -137,14 +144,14 @@ services:
       retries: 5
     restart: unless-stopped
     networks:
-      - imagery-network
+      - guardrail-network
 
-  # Frontend - React Dashboard
+  # Frontend - Validation Dashboard
   frontend:
     build:
       context: ./food-guard-ui
       dockerfile: Dockerfile
-    container_name: imagery-frontend
+    container_name: guardrail-frontend
     ports:
       - "3000:80"
     environment:
@@ -153,14 +160,14 @@ services:
       - api
     restart: unless-stopped
     networks:
-      - imagery-network
+      - guardrail-network
 
   # Flower - Celery Monitoring (Optional)
   flower:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: imagery-flower
+    container_name: guardrail-flower
     profiles:
       - monitoring
     ports:
@@ -173,10 +180,10 @@ services:
         condition: service_healthy
     restart: unless-stopped
     networks:
-      - imagery-network
+      - guardrail-network
 
 networks:
-  imagery-network:
+  guardrail-network:
     driver: bridge
 
 volumes:

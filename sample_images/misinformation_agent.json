@@ -1,0 +1,895 @@
+{
+  "name": "Misinformation Detection AI Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://news.google.com/rss/search?q=crisis+OR+pandemic+OR+climate+OR+conflict&hl=en-US&gl=US&ceid=US:en",
+        "options": {}
+      },
+      "id": "rss-news-feed",
+      "name": "RSS News Feed - Crisis Topics",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        460,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://news.google.com/rss/search?q=breaking+news+misinformation&hl=en-US&gl=US&ceid=US:en",
+        "options": {}
+      },
+      "id": "rss-misinfo-feed",
+      "name": "RSS Feed - Misinformation Keywords",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        460,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "searchQuery": "=crisis OR pandemic OR \"breaking news\" -filter:retweets -filter:replies",
+        "returnAll": false,
+        "limit": 50,
+        "additionalFields": {}
+      },
+      "id": "twitter-monitor",
+      "name": "Twitter/X Monitor",
+      "type": "n8n-nodes-base.twitter",
+      "typeVersion": 2,
+      "position": [
+        460,
+        600
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "merge-sources",
+      "name": "Merge Content Sources",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [
+        680,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "content-id",
+              "name": "content_id",
+              "value": "={{ $json.id || $json.guid || $now }}",
+              "type": "string"
+            },
+            {
+              "id": "title-field",
+              "name": "title",
+              "value": "={{ $json.title || $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "content-field",
+              "name": "content",
+              "value": "={{ $json.contentSnippet || $json.description || $json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "url-field",
+              "name": "source_url",
+              "value": "={{ $json.link || $json.url }}",
+              "type": "string"
+            },
+            {
+              "id": "timestamp-field",
+              "name": "timestamp",
+              "value": "={{ $json.pubDate || $json.created_at || $now }}",
+              "type": "string"
+            },
+            {
+              "id": "source-field",
+              "name": "source_type",
+              "value": "={{ $json.creator || 'RSS' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "normalize-data",
+      "name": "Normalize Content Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        900,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "=SELECT content_id FROM processed_content WHERE content_id = '{{ $json.content_id }}' LIMIT 1",
+        "options": {}
+      },
+      "id": "check-duplicates",
+      "name": "Check for Duplicates",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1120,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": ""
+          },
+          "conditions": [
+            {
+              "id": "is-new",
+              "leftValue": "={{ $json.content_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-new-content",
+      "name": "Filter New Content Only",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        1340,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the following content for potential misinformation indicators:\n\nTitle: {{ $json.title }}\nContent: {{ $json.content }}\nSource: {{ $json.source_type }}\n\nTask: Identify if this content contains:\n1. Unverified claims about crises (pandemic, climate, conflict)\n2. Emotional manipulation or sensationalism\n3. Lack of credible sources\n4. Contradictions with established facts\n5. Urgency tactics or fear-mongering\n\nProvide a risk score (0-100) and extract specific claims that need fact-checking. Format as JSON:\n{\n  \"risk_score\": <number>,\n  \"misinformation_indicators\": [<list>],\n  \"claims_to_verify\": [<list>],\n  \"reasoning\": \"<explanation>\"\n}",
+        "options": {
+          "systemMessage": "You are an expert misinformation analyst specializing in crisis-related content. You identify potential misinformation patterns, extract claims for verification, and provide objective analysis without bias."
+        }
+      },
+      "id": "ai-analyzer",
+      "name": "AI Misinformation Analyzer",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.1,
+      "position": [
+        1560,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false
+          },
+          "conditions": [
+            {
+              "id": "high-risk",
+              "leftValue": "={{ $json.risk_score }}",
+              "rightValue": "40",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "filter-high-risk",
+      "name": "Filter High Risk Content",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.1,
+      "position": [
+        1780,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://factchecktools.googleapis.com/v1alpha1/claims:search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.claims_to_verify[0] }}"
+            },
+            {
+              "name": "languageCode",
+              "value": "en"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "google-fact-check",
+      "name": "Google Fact Check API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2000,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://idir.uta.edu/claimbuster/api/v2/score/text/{{ encodeURIComponent($json.claims_to_verify[0]) }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "claimbuster-api",
+      "name": "ClaimBuster API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2000,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition",
+        "options": {}
+      },
+      "id": "merge-verification",
+      "name": "Merge Verification Results",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        2220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "verification-id",
+              "name": "fact_check_sources",
+              "value": "={{ $json.claims }}",
+              "type": "array"
+            },
+            {
+              "id": "claim-rating",
+              "name": "claim_rating",
+              "value": "={{ $json.score }}",
+              "type": "number"
+            },
+            {
+              "id": "verification-status",
+              "name": "verification_status",
+              "value": "={{ $json.claims && $json.claims.length > 0 ? 'verified' : 'needs_review' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "process-verification",
+      "name": "Process Verification Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "operation": "create",
+        "chatId": {
+          "__rl": true,
+          "value": "agent_chat_id",
+          "mode": "list",
+          "cachedResultName": "Agent Chat"
+        },
+        "options": {
+          "systemPrompt": "You are a helpful assistant that creates accessible explanations of misinformation and fact-checks for diverse audiences. Your goal is to educate, not condescend."
+        }
+      },
+      "id": "ai-agent-chat",
+      "name": "AI Agent - Generate Explanation",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        2660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Create a clear, accessible explanation for the following misinformation case:\n\nOriginal Content: {{ $json.title }}\nRisk Score: {{ $json.risk_score }}\nMisinformation Indicators: {{ $json.misinformation_indicators }}\nVerification Results: {{ $json.fact_check_sources }}\n\nCreate 3 versions:\n1. SHORT (1-2 sentences) - For social media\n2. MEDIUM (1 paragraph) - For general audience\n3. DETAILED (2-3 paragraphs) - For in-depth readers\n\nEach should:\n- Explain what the claim is\n- State why it's misleading/false\n- Provide correct information\n- Cite verification sources\n- Use simple, non-technical language\n\nFormat as JSON with keys: short, medium, detailed",
+        "options": {}
+      },
+      "id": "generate-explanations",
+      "name": "Generate Audience-Specific Explanations",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.1,
+      "position": [
+        2880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "misinformation_reports",
+        "columns": {
+          "mappings": [
+            {
+              "id": "col1",
+              "column": "content_id",
+              "value": "={{ $json.content_id }}"
+            },
+            {
+              "id": "col2",
+              "column": "title",
+              "value": "={{ $json.title }}"
+            },
+            {
+              "id": "col3",
+              "column": "risk_score",
+              "value": "={{ $json.risk_score }}"
+            },
+            {
+              "id": "col4",
+              "column": "verification_status",
+              "value": "={{ $json.verification_status }}"
+            },
+            {
+              "id": "col5",
+              "column": "explanation_short",
+              "value": "={{ $json.short }}"
+            },
+            {
+              "id": "col6",
+              "column": "explanation_medium",
+              "value": "={{ $json.medium }}"
+            },
+            {
+              "id": "col7",
+              "column": "explanation_detailed",
+              "value": "={{ $json.detailed }}"
+            },
+            {
+              "id": "col8",
+              "column": "source_url",
+              "value": "={{ $json.source_url }}"
+            },
+            {
+              "id": "col9",
+              "column": "created_at",
+              "value": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "id": "save-to-db",
+      "name": "Save to Database",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "channel": {
+          "__rl": true,
+          "value": "alerts",
+          "mode": "list",
+          "cachedResultName": "alerts"
+        },
+        "text": "=🚨 *Misinformation Alert* (Risk: {{ $json.risk_score }}/100)\n\n*Original Claim:*\n{{ $json.title }}\n\n*Short Explanation:*\n{{ $json.short }}\n\n*Status:* {{ $json.verification_status }}\n\n<{{ $json.source_url }}|View Source>",
+        "otherOptions": {}
+      },
+      "id": "slack-alert",
+      "name": "Send Slack Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        3100,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "misinformation_alerts",
+          "mode": "list"
+        },
+        "messageType": "text",
+        "message": "=🔍 *Misinformation Detected*\n\nRisk Level: {{ $json.risk_score >= 70 ? '🔴 High' : $json.risk_score >= 40 ? '🟡 Medium' : '🟢 Low' }}\n\n{{ $json.medium }}\n\nRead more: {{ $json.source_url }}\n\n#FactCheck #Misinformation",
+        "additionalFields": {}
+      },
+      "id": "telegram-alert",
+      "name": "Send Telegram Alert",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        3100,
+        660
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "insert",
+        "table": "processed_content",
+        "columns": {
+          "mappings": [
+            {
+              "id": "content-tracking",
+              "column": "content_id",
+              "value": "={{ $json.content_id }}"
+            },
+            {
+              "id": "processed-time",
+              "column": "processed_at",
+              "value": "={{ $now }}"
+            }
+          ]
+        }
+      },
+      "id": "mark-processed",
+      "name": "Mark as Processed",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3320,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      },
+      "id": "daily-report-trigger",
+      "name": "Daily Report Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  DATE(created_at) as report_date,\n  COUNT(*) as total_cases,\n  AVG(risk_score) as avg_risk,\n  COUNT(CASE WHEN risk_score >= 70 THEN 1 END) as high_risk,\n  COUNT(CASE WHEN risk_score BETWEEN 40 AND 69 THEN 1 END) as medium_risk,\n  COUNT(CASE WHEN verification_status = 'verified' THEN 1 END) as verified\nFROM misinformation_reports\nWHERE created_at >= NOW() - INTERVAL '24 hours'\nGROUP BY DATE(created_at)",
+        "options": {}
+      },
+      "id": "generate-daily-report",
+      "name": "Generate Daily Statistics",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        460,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Create a daily misinformation report summary:\n\nTotal Cases Detected: {{ $json.total_cases }}\nAverage Risk Score: {{ $json.avg_risk }}\nHigh Risk Cases: {{ $json.high_risk }}\nMedium Risk Cases: {{ $json.medium_risk }}\nVerified Cases: {{ $json.verified }}\n\nGenerate:\n1. Executive summary (2-3 sentences)\n2. Key trends observed\n3. Notable patterns\n4. Recommendations for monitoring\n\nFormat as structured text for email.",
+        "options": {}
+      },
+      "id": "ai-report-summary",
+      "name": "AI Report Summary",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.1,
+      "position": [
+        680,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "alerts@yourdomain.com",
+        "toEmail": "team@yourdomain.com",
+        "subject": "=Daily Misinformation Detection Report - {{ $now.toFormat('yyyy-MM-dd') }}",
+        "emailType": "html",
+        "message": "={{ $json.summary }}",
+        "options": {}
+      },
+      "id": "email-daily-report",
+      "name": "Email Daily Report",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        900,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📊 Misinformation Detection AI Agent\n\n**Purpose:** Monitor multiple content streams for crisis-related misinformation, verify claims, and generate accessible explanations.\n\n**Features:**\n- Multi-source monitoring (RSS, Twitter/X)\n- AI-powered risk assessment\n- Cross-reference verification\n- Audience-specific explanations\n- Real-time alerts\n- Daily reporting\n\n**Setup Required:**\n1. Configure database (PostgreSQL)\n2. Add API credentials (OpenAI, Google Fact Check, Twitter)\n3. Set up Slack/Telegram webhooks\n4. Adjust monitoring intervals",
+        "height": 460,
+        "width": 380
+      },
+      "id": "workflow-documentation",
+      "name": "Workflow Documentation",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -20,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🔍 Content Collection\nMonitors:\n- News RSS feeds (crisis keywords)\n- Misinformation-related feeds\n- Social media streams\n\nRuns every 15 minutes",
+        "height": 240,
+        "width": 280
+      },
+      "id": "collection-note",
+      "name": "Collection Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        380,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 🤖 AI Analysis & Verification\n- Risk scoring\n- Claim extraction\n- Fact-checking APIs\n- Cross-reference validation",
+        "height": 240,
+        "width": 280
+      },
+      "id": "analysis-note",
+      "name": "Analysis Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1900,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 📢 Distribution & Storage\n- Generate explanations\n- Store in database\n- Send alerts (Slack/Telegram)\n- Track processed content",
+        "height": 240,
+        "width": 280
+      },
+      "id": "distribution-note",
+      "name": "Distribution Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3000,
+        80
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "RSS News Feed - Crisis Topics",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "RSS Feed - Misinformation Keywords",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Twitter/X Monitor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS News Feed - Crisis Topics": {
+      "main": [
+        [
+          {
+            "node": "Merge Content Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Feed - Misinformation Keywords": {
+      "main": [
+        [
+          {
+            "node": "Merge Content Sources",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Twitter/X Monitor": {
+      "main": [
+        [
+          {
+            "node": "Merge Content Sources",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge Content Sources": {
+      "main": [
+        [
+          {
+            "node": "Normalize Content Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Content Data": {
+      "main": [
+        [
+          {
+            "node": "Check for Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check for Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Filter New Content Only",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter New Content Only": {
+      "main": [
+        [
+          {
+            "node": "AI Misinformation Analyzer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Misinformation Analyzer": {
+      "main": [
+        [
+          {
+            "node": "Filter High Risk Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter High Risk Content": {
+      "main": [
+        [
+          {
+            "node": "Google Fact Check API",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "ClaimBuster API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Fact Check API": {
+      "main": [
+        [
+          {
+            "node": "Merge Verification Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ClaimBuster API": {
+      "main": [
+        [
+          {
+            "node": "Merge Verification Results",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Verification Results": {
+      "main": [
+        [
+          {
+            "node": "Process Verification Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Verification Data": {
+      "main": [
+        [
+          {
+            "node": "AI Agent - Generate Explanation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent - Generate Explanation": {
+      "main": [
+        [
+          {
+            "node": "Generate Audience-Specific Explanations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Audience-Specific Explanations": {
+      "main": [
+        [
+          {
+            "node": "Save to Database",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Slack Alert",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Telegram Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Database": {
+      "main": [
+        [
+          {
+            "node": "Mark as Processed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Report Trigger": {
+      "main": [
+        [
+          {
+            "node": "Generate Daily Statistics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Daily Statistics": {
+      "main": [
+        [
+          {
+            "node": "AI Report Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Report Summary": {
+      "main": [
+        [
+          {
+            "node": "Email Daily Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": ""
+  },
+  "staticData": null,
+  "tags": [
+    {
+      "createdAt": "2025-10-03T12:00:00.000Z",
+      "updatedAt": "2025-10-03T12:00:00.000Z",
+      "id": "1",
+      "name": "AI Agent"
+    },
+    {
+      "createdAt": "2025-10-03T12:00:00.000Z",
+      "updatedAt": "2025-10-03T12:00:00.000Z",
+      "id": "2",
+      "name": "Misinformation Detection"
+    }
+  ],
+  "triggerCount": 2,
+  "updatedAt": "2025-10-03T12:00:00.000Z",
+  "versionId": "1"
+}

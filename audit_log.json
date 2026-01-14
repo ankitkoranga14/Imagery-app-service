@@ -1,0 +1,1382 @@
+[
+  {
+    "filename": "salad-bowl-slices-tomato-spinach-600nw-2344224543.webp",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "PASS",
+    "reasons": [],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 137.97841666666667,
+      "glare_percentage": 0.00013333333333333334,
+      "blur_variance": 750.7734653282043,
+      "combined_blur_score": 0.20583549210408741,
+      "contrast_std_dev": 57.27545082749725,
+      "dynamic_range": 155.0,
+      "food_object_count": 1.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.6595600843429565,
+      "nsfw_score": 1.4931857549527194e-05,
+      "ready_to_eat_score": 0.6595600843429565
+    },
+    "divergence": false
+  },
+  {
+    "filename": "carrot-rice-plate-marble-surface_114579-63851.jpg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Image is too blurry (score=0.64): laplacian_var=90.0, tenengrad=2587.7, fft_ratio=0.627"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 123.85905716321511,
+      "glare_percentage": 0.0017506761364071682,
+      "blur_variance": 90.01532354615183,
+      "combined_blur_score": 0.6436954481730836,
+      "contrast_std_dev": 37.13443021673013,
+      "dynamic_range": 138.0,
+      "food_object_count": 2.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.988206684589386,
+      "nsfw_score": 1.7462622054154053e-05,
+      "ready_to_eat_score": 0.988206684589386
+    },
+    "divergence": false
+  },
+  {
+    "filename": "b962af86cae0604f0ef7d0ce96800ba9.jpg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "PASS",
+    "reasons": [],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 75.662971720476,
+      "glare_percentage": 0.002592684776940217,
+      "blur_variance": 426.60316147195374,
+      "combined_blur_score": 0.34872936666491916,
+      "contrast_std_dev": 59.1926319640231,
+      "dynamic_range": 186.0,
+      "food_object_count": 1.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.9995068311691284,
+      "nsfw_score": 7.9889185144566e-05,
+      "ready_to_eat_score": 0.9995068311691284
+    },
+    "divergence": false
+  },
+  {
+    "filename": "download (2).jpeg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Acceptable sharpness (blur_score=0.00)"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 166.56116473616473,
+      "glare_percentage": 0.40785070785070787,
+      "blur_variance": 3393.5559935091683,
+      "combined_blur_score": 0.0,
+      "contrast_std_dev": 86.52826509539788,
+      "dynamic_range": 219.0,
+      "food_object_count": 5.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.32596826553344727,
+      "nsfw_score": 0.0002832816098816693,
+      "ready_to_eat_score": 0.32596826553344727
+    },
+    "divergence": false
+  },
+  {
+    "filename": "a8ece3cf3bfc8eb602d94dc70e9776fd.jpg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "PASS",
+    "reasons": [],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 75.662971720476,
+      "glare_percentage": 0.002592684776940217,
+      "blur_variance": 426.60316147195374,
+      "combined_blur_score": 0.34872936666491916,
+      "contrast_std_dev": 59.1926319640231,
+      "dynamic_range": 186.0,
+      "food_object_count": 1.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.9995068311691284,
+      "nsfw_score": 7.9889185144566e-05,
+      "ready_to_eat_score": 0.9995068311691284
+    },
+    "divergence": false
+  },
+  {
+    "filename": "blur2.jpeg",
+    "primary_model_status": "BLOCK",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Image is too blurry (score=0.70): laplacian_var=59.7, tenengrad=3755.4, fft_ratio=0.463"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 204.38672014614193,
+      "glare_percentage": 0.06818633096382193,
+      "blur_variance": 59.674606210008726,
+      "combined_blur_score": 0.7025727349397708,
+      "contrast_std_dev": 50.331993438852855,
+      "dynamic_range": 155.0,
+      "food_object_count": 0.0,
+      "distinct_dish_count": 0.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.8848189115524292,
+      "nsfw_score": 0.0005828281864523888,
+      "ready_to_eat_score": 0.8848189115524292
+    },
+    "divergence": false
+  },
+  {
+    "filename": "realistic-closeup-grilled-octopus-dish-260nw-2654580589.webp",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "L3 Geometry: Multiple food items detected"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 138.6962087912088,
+      "glare_percentage": 0.06636446886446887,
+      "blur_variance": 1140.0009240076033,
+      "combined_blur_score": 0.05300687830687832,
+      "contrast_std_dev": 55.609330984884565,
+      "dynamic_range": 228.0,
+      "food_object_count": 2.0,
+      "distinct_dish_count": 2.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.9521512985229492,
+      "nsfw_score": 5.510055416380055e-05,
+      "ready_to_eat_score": 0.9521512985229492
+    },
+    "divergence": false
+  },
+  {
+    "filename": "burger.jpeg",
+    "primary_model_status": "PASS",
+    "guardrail_status": "PASS",
+    "reasons": [],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 95.41320066666667,
+      "glare_percentage": 0.0015213333333333333,
+      "blur_variance": 788.9110942929631,
+      "combined_blur_score": 0.10892424157266374,
+      "contrast_std_dev": 56.34794594785509,
+      "dynamic_range": 175.0,
+      "food_object_count": 1.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.8124195337295532,
+      "nsfw_score": 0.009730938822031021,
+      "ready_to_eat_score": 0.8124195337295532
+    },
+    "divergence": false
+  },
+  {
+    "filename": "backend - public.png",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Image is too blurry (score=0.65): laplacian_var=74.6, tenengrad=1076.5, fft_ratio=0.852",
+      "L4 Context: Image not recognized as food (a photo of an object, tool, or technology)"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 49.49010073623946,
+      "glare_percentage": 0.0,
+      "blur_variance": 74.62026946333367,
+      "combined_blur_score": 0.6486217119389508,
+      "contrast_std_dev": 10.425219403212694,
+      "dynamic_range": 17.0,
+      "food_object_count": 0.0,
+      "distinct_dish_count": 0.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.00043453002581372857,
+      "nsfw_score": 0.28775033354759216,
+      "ready_to_eat_score": 0.00043453002581372857
+    },
+    "divergence": false
+  },
+  {
+    "filename": "samp.jpg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Image is too blurry (score=0.62): laplacian_var=153.2, tenengrad=3546.1, fft_ratio=0.590"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 111.67968318540434,
+      "glare_percentage": 7.273175542406311e-05,
+      "blur_variance": 153.17516394176292,
+      "combined_blur_score": 0.6150069752604583,
+      "contrast_std_dev": 52.52544071716832,
+      "dynamic_range": 163.0,
+      "food_object_count": 1.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.3274565637111664,
+      "nsfw_score": 0.0011008366709575057,
+      "ready_to_eat_score": 0.3274565637111664
+    },
+    "divergence": false
+  },
+  {
+    "filename": "multiple.jpg",
+    "primary_model_status": "BLOCK",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "L3 Geometry: Multiple food items detected",
+      "L4 Context: Image not recognized as food (packaged or processed food products)"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 107.96412123217782,
+      "glare_percentage": 0.010065911033893163,
+      "blur_variance": 1592.915916619014,
+      "combined_blur_score": 0.0,
+      "contrast_std_dev": 62.67013154769658,
+      "dynamic_range": 206.0,
+      "food_object_count": 7.0,
+      "distinct_dish_count": 5.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.046217530965805054,
+      "nsfw_score": 0.00024578970624133945,
+      "ready_to_eat_score": 0.046217530965805054
+    },
+    "divergence": false
+  },
+  {
+    "filename": "sample multip.jpeg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "PASS",
+    "reasons": [],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 140.36433370993637,
+      "glare_percentage": 0.002774969772650691,
+      "blur_variance": 4567.3727458862595,
+      "combined_blur_score": 0.0,
+      "contrast_std_dev": 63.98701055072197,
+      "dynamic_range": 194.0,
+      "food_object_count": 10.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.7361828684806824,
+      "nsfw_score": 4.8311499995179474e-05,
+      "ready_to_eat_score": 0.7361828684806824
+    },
+    "divergence": false
+  },
+  {
+    "filename": "blu.webp",
+    "primary_model_status": "BLOCK",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Image is too blurry (score=0.79): laplacian_var=17.5, tenengrad=1754.5, fft_ratio=0.396"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 147.40038126361657,
+      "glare_percentage": 0.06603641456582633,
+      "blur_variance": 17.54088955574699,
+      "combined_blur_score": 0.7883161547109532,
+      "contrast_std_dev": 59.15323439940254,
+      "dynamic_range": 207.0,
+      "food_object_count": 1.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.610218346118927,
+      "nsfw_score": 6.120798934716731e-05,
+      "ready_to_eat_score": 0.610218346118927
+    },
+    "divergence": false
+  },
+  {
+    "filename": "unnamed.jpg",
+    "primary_model_status": "BLOCK",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "L4 Context: Image not recognized as food (a photo of a person or human face)"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 72.35273539936625,
+      "glare_percentage": 0.08442485249125874,
+      "blur_variance": 3123.757596920195,
+      "combined_blur_score": 0.0,
+      "contrast_std_dev": 80.7185220708208,
+      "dynamic_range": 253.0,
+      "food_object_count": 0.0,
+      "distinct_dish_count": 0.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 3.84946761187166e-05,
+      "nsfw_score": 0.010270741768181324,
+      "ready_to_eat_score": 3.84946761187166e-05
+    },
+    "divergence": false
+  },
+  {
+    "filename": "schema.png",
+    "primary_model_status": "BLOCK",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Acceptable sharpness (blur_score=0.09)",
+      "L4 Context: Image not recognized as food (a photo of an object, tool, or technology)"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 247.9157763425263,
+      "glare_percentage": 0.9571259537061837,
+      "blur_variance": 1907.2172933247818,
+      "combined_blur_score": 0.08820509947814743,
+      "contrast_std_dev": 36.66458258797427,
+      "dynamic_range": 0.0,
+      "food_object_count": 0.0,
+      "distinct_dish_count": 0.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.04986858367919922,
+      "nsfw_score": 0.014848950318992138,
+      "ready_to_eat_score": 0.04986858367919922
+    },
+    "divergence": false
+  },
+  {
+    "filename": "download.jpeg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Acceptable sharpness (blur_score=0.00)"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 166.56116473616473,
+      "glare_percentage": 0.40785070785070787,
+      "blur_variance": 3393.5559935091683,
+      "combined_blur_score": 0.0,
+      "contrast_std_dev": 86.52826509539788,
+      "dynamic_range": 219.0,
+      "food_object_count": 5.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.32596826553344727,
+      "nsfw_score": 0.0002832816098816693,
+      "ready_to_eat_score": 0.32596826553344727
+    },
+    "divergence": false
+  },
+  {
+    "filename": "sampl.jpg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "PASS",
+    "reasons": [],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 75.662971720476,
+      "glare_percentage": 0.002592684776940217,
+      "blur_variance": 426.60316147195374,
+      "combined_blur_score": 0.34872936666491916,
+      "contrast_std_dev": 59.1926319640231,
+      "dynamic_range": 186.0,
+      "food_object_count": 1.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.9995068311691284,
+      "nsfw_score": 7.9889185144566e-05,
+      "ready_to_eat_score": 0.9995068311691284
+    },
+    "divergence": false
+  },
+  {
+    "filename": "images (2).jpeg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "L4 Context: Image not recognized as food (packaged or processed food products)"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 175.84612480127186,
+      "glare_percentage": 0.007293322734499205,
+      "blur_variance": 251.57334342489918,
+      "combined_blur_score": 0.5127699937950303,
+      "contrast_std_dev": 23.962469638980266,
+      "dynamic_range": 83.0,
+      "food_object_count": 1.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.10414828360080719,
+      "nsfw_score": 0.013948234729468822,
+      "ready_to_eat_score": 0.10414828360080719
+    },
+    "divergence": false
+  },
+  {
+    "filename": "download (1).jpeg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Acceptable sharpness (blur_score=0.00)"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 166.56116473616473,
+      "glare_percentage": 0.40785070785070787,
+      "blur_variance": 3393.5559935091683,
+      "combined_blur_score": 0.0,
+      "contrast_std_dev": 86.52826509539788,
+      "dynamic_range": 219.0,
+      "food_object_count": 5.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.32596826553344727,
+      "nsfw_score": 0.0002832816098816693,
+      "ready_to_eat_score": 0.32596826553344727
+    },
+    "divergence": false
+  },
+  {
+    "filename": "sampleeee.jpeg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "L3 Geometry: Multiple food items detected"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 103.9581541646759,
+      "glare_percentage": 0.00013935340022296544,
+      "blur_variance": 3336.407651258077,
+      "combined_blur_score": 0.0,
+      "contrast_std_dev": 57.246810959453065,
+      "dynamic_range": 177.0,
+      "food_object_count": 7.0,
+      "distinct_dish_count": 3.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.47704073786735535,
+      "nsfw_score": 0.0001213807991007343,
+      "ready_to_eat_score": 0.47704073786735535
+    },
+    "divergence": false
+  },
+  {
+    "filename": "mult.webp",
+    "primary_model_status": "BLOCK",
+    "guardrail_status": "PASS",
+    "reasons": [],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 140.37186813186813,
+      "glare_percentage": 0.06547619047619048,
+      "blur_variance": 2481.660152937298,
+      "combined_blur_score": 0.0,
+      "contrast_std_dev": 62.63754017653651,
+      "dynamic_range": 224.0,
+      "food_object_count": 5.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.9760298728942871,
+      "nsfw_score": 2.1871495846426114e-05,
+      "ready_to_eat_score": 0.9760298728942871
+    },
+    "divergence": true
+  },
+  {
+    "filename": "carrot-rice-plate-marble-surface.jpg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Image is too blurry (score=0.62): laplacian_var=126.5, tenengrad=2679.4, fft_ratio=0.650"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 123.873450875,
+      "glare_percentage": 0.00247,
+      "blur_variance": 126.48824608578032,
+      "combined_blur_score": 0.6173199854747278,
+      "contrast_std_dev": 37.20404094800226,
+      "dynamic_range": 138.0,
+      "food_object_count": 2.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.9685401916503906,
+      "nsfw_score": 5.329041232471354e-05,
+      "ready_to_eat_score": 0.9685401916503906
+    },
+    "divergence": false
+  },
+  {
+    "filename": "blur-photo-vibrant-appetizing-still-260nw-2708216283.webp",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Image is too blurry (score=0.83): laplacian_var=6.2, tenengrad=550.2, fft_ratio=0.361",
+      "L3 Geometry: Multiple food items detected"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 127.24516079158936,
+      "glare_percentage": 0.06596320346320346,
+      "blur_variance": 6.207520913975493,
+      "combined_blur_score": 0.8316709917715126,
+      "contrast_std_dev": 57.97180323569183,
+      "dynamic_range": 229.0,
+      "food_object_count": 2.0,
+      "distinct_dish_count": 2.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.9993374943733215,
+      "nsfw_score": 1.0405878128949553e-05,
+      "ready_to_eat_score": 0.9993374943733215
+    },
+    "divergence": false
+  },
+  {
+    "filename": "istockphoto-542180758-612x612.jpg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Acceptable sharpness (blur_score=0.30)"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 137.99509403434575,
+      "glare_percentage": 0.1628500256311675,
+      "blur_variance": 579.3563651609587,
+      "combined_blur_score": 0.2980175096923323,
+      "contrast_std_dev": 97.89114355221159,
+      "dynamic_range": 243.0,
+      "food_object_count": 0.0,
+      "distinct_dish_count": 0.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.9997847676277161,
+      "nsfw_score": 2.0206136468914337e-05,
+      "ready_to_eat_score": 0.9997847676277161
+    },
+    "divergence": false
+  },
+  {
+    "filename": "thali.jpeg",
+    "primary_model_status": "PASS",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "L3 Geometry: Multiple food items detected"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 168.19222972972972,
+      "glare_percentage": 0.13736089030206677,
+      "blur_variance": 4845.76868710943,
+      "combined_blur_score": 0.0,
+      "contrast_std_dev": 73.99358799534032,
+      "dynamic_range": 225.0,
+      "food_object_count": 2.0,
+      "distinct_dish_count": 2.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.9823980927467346,
+      "nsfw_score": 2.904224402300315e-06,
+      "ready_to_eat_score": 0.9823980927467346
+    },
+    "divergence": true
+  },
+  {
+    "filename": "Chicken-Rice-Bowl_EXPS_TOHAM25_25774_P2_MD_04_24_10b.jpg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "PASS",
+    "reasons": [],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 164.84529791666668,
+      "glare_percentage": 0.06525972222222222,
+      "blur_variance": 1520.6546830701736,
+      "combined_blur_score": 0.005946590219225179,
+      "contrast_std_dev": 57.22863788654023,
+      "dynamic_range": 186.0,
+      "food_object_count": 4.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.7919566631317139,
+      "nsfw_score": 8.074517245404422e-05,
+      "ready_to_eat_score": 0.7919566631317139
+    },
+    "divergence": false
+  },
+  {
+    "filename": "dining-table-set-traditional-meal-various-dishes-laid-out-multiple-featuring-fresh-vegetables-eggs-407804556.webp",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "PASS",
+    "reasons": [],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 151.99870544090055,
+      "glare_percentage": 0.00028142589118198874,
+      "blur_variance": 537.6982073441866,
+      "combined_blur_score": 0.25316398273838747,
+      "contrast_std_dev": 42.07283116396505,
+      "dynamic_range": 142.0,
+      "food_object_count": 8.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.8777568340301514,
+      "nsfw_score": 2.3923937988001853e-05,
+      "ready_to_eat_score": 0.8777568340301514
+    },
+    "divergence": false
+  },
+  {
+    "filename": "228243_0_gzvfic.webp",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "L4 Context: Image not recognized as food (packaged or processed food products)"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 131.35413203125,
+      "glare_percentage": 0.02370625,
+      "blur_variance": 386.17894838553065,
+      "combined_blur_score": 0.44367833694163894,
+      "contrast_std_dev": 51.23158855144396,
+      "dynamic_range": 142.0,
+      "food_object_count": 1.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.010929656215012074,
+      "nsfw_score": 0.0003155906160827726,
+      "ready_to_eat_score": 0.010929656215012074
+    },
+    "divergence": false
+  },
+  {
+    "filename": "istockphoto-503337620-612x612.jpg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "PASS",
+    "reasons": [],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 95.56069602859299,
+      "glare_percentage": 0.0029796232218377546,
+      "blur_variance": 1749.0384727926719,
+      "combined_blur_score": 0.0,
+      "contrast_std_dev": 76.30439503853529,
+      "dynamic_range": 209.0,
+      "food_object_count": 2.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.999478280544281,
+      "nsfw_score": 1.9891178908437723e-06,
+      "ready_to_eat_score": 0.999478280544281
+    },
+    "divergence": false
+  },
+  {
+    "filename": "sampleee.jpeg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "L4 Context: Image not recognized as food (spoiled, moldy, or rotten food)"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 144.63144806732052,
+      "glare_percentage": 0.001949589193705612,
+      "blur_variance": 3569.8357813195585,
+      "combined_blur_score": 0.0,
+      "contrast_std_dev": 71.4005022025824,
+      "dynamic_range": 211.0,
+      "food_object_count": 2.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.03659185394644737,
+      "nsfw_score": 0.007002644706517458,
+      "ready_to_eat_score": 0.03659185394644737
+    },
+    "divergence": false
+  },
+  {
+    "filename": "images (3).jpeg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Image is too blurry (score=0.64): laplacian_var=159.6, tenengrad=2061.5, fft_ratio=0.591"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 224.72447093889716,
+      "glare_percentage": 0.002940884252359662,
+      "blur_variance": 159.59880752356182,
+      "combined_blur_score": 0.6414543495981622,
+      "contrast_std_dev": 21.79554798241434,
+      "dynamic_range": 69.0,
+      "food_object_count": 1.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.49277809262275696,
+      "nsfw_score": 0.004601873457431793,
+      "ready_to_eat_score": 0.49277809262275696
+    },
+    "divergence": false
+  },
+  {
+    "filename": "blurr.jpg",
+    "primary_model_status": "BLOCK",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Image is too blurry (score=0.78): laplacian_var=47.7, tenengrad=1277.3, fft_ratio=0.399"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 210.21047925896093,
+      "glare_percentage": 0.14704309303262184,
+      "blur_variance": 47.68488232588,
+      "combined_blur_score": 0.7844291614695782,
+      "contrast_std_dev": 43.03061502900393,
+      "dynamic_range": 131.0,
+      "food_object_count": 0.0,
+      "distinct_dish_count": 0.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.9463517665863037,
+      "nsfw_score": 7.401517359539866e-05,
+      "ready_to_eat_score": 0.9463517665863037
+    },
+    "divergence": false
+  },
+  {
+    "filename": "multiple.webp",
+    "primary_model_status": "BLOCK",
+    "guardrail_status": "PASS",
+    "reasons": [],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 140.37186813186813,
+      "glare_percentage": 0.06547619047619048,
+      "blur_variance": 2481.660152937298,
+      "combined_blur_score": 0.0,
+      "contrast_std_dev": 62.63754017653651,
+      "dynamic_range": 224.0,
+      "food_object_count": 5.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.9760298728942871,
+      "nsfw_score": 2.1871495846426114e-05,
+      "ready_to_eat_score": 0.9760298728942871
+    },
+    "divergence": true
+  },
+  {
+    "filename": "170203151709-jambalaya.jpg",
+    "primary_model_status": "PASS",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Image is too blurry (score=0.56): laplacian_var=222.6, tenengrad=4626.9, fft_ratio=0.605"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 147.16137170087228,
+      "glare_percentage": 0.0017465819962982278,
+      "blur_variance": 222.61437464620454,
+      "combined_blur_score": 0.5592451878940944,
+      "contrast_std_dev": 46.704917534854964,
+      "dynamic_range": 136.0,
+      "food_object_count": 1.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.9719070196151733,
+      "nsfw_score": 0.0008546074386686087,
+      "ready_to_eat_score": 0.9719070196151733
+    },
+    "divergence": true
+  },
+  {
+    "filename": "user_multiple.jpg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Image is too blurry (score=0.61): laplacian_var=155.5, tenengrad=3560.8, fft_ratio=0.591",
+      "L4 Context: Image not recognized as food (spoiled, moldy, or rotten food)"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 111.67337544759114,
+      "glare_percentage": 3.6875406901041664e-05,
+      "blur_variance": 155.5099493673253,
+      "combined_blur_score": 0.613323515159367,
+      "contrast_std_dev": 52.455924319677,
+      "dynamic_range": 163.0,
+      "food_object_count": 1.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.2643589377403259,
+      "nsfw_score": 0.0010540771763771772,
+      "ready_to_eat_score": 0.2643589377403259
+    },
+    "divergence": false
+  },
+  {
+    "filename": "images.jpeg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "L4 Context: Image not recognized as food (spoiled, moldy, or rotten food)"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 124.88810119544064,
+      "glare_percentage": 0.0059374875888637355,
+      "blur_variance": 5968.615011313516,
+      "combined_blur_score": 0.0,
+      "contrast_std_dev": 63.678052461965486,
+      "dynamic_range": 201.0,
+      "food_object_count": 5.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.12289080023765564,
+      "nsfw_score": 0.00036877713864669204,
+      "ready_to_eat_score": 0.12289080023765564
+    },
+    "divergence": false
+  },
+  {
+    "filename": "photo-cherry-transparent-plate-healthy-food-vegetarian-red-berries-fruits-berry-snack-149889393.webp",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Acceptable sharpness (blur_score=0.09)",
+      "L4 Context: Image not recognized as food (raw ingredients or uncooked food)"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 193.43377708333333,
+      "glare_percentage": 0.597225,
+      "blur_variance": 765.1311631103465,
+      "combined_blur_score": 0.09394753475586143,
+      "contrast_std_dev": 84.154757725625,
+      "dynamic_range": 216.0,
+      "food_object_count": 0.0,
+      "distinct_dish_count": 0.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.1176910474896431,
+      "nsfw_score": 0.0371972993016243,
+      "ready_to_eat_score": 0.1176910474896431
+    },
+    "divergence": false
+  },
+  {
+    "filename": "download (3).jpeg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "L4 Context: Image not recognized as food (pet food or animal feed)"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 156.65031720856464,
+      "glare_percentage": 0.010765265662172879,
+      "blur_variance": 1268.3778121457462,
+      "combined_blur_score": 0.01934578905630453,
+      "contrast_std_dev": 59.51701492282392,
+      "dynamic_range": 190.0,
+      "food_object_count": 0.0,
+      "distinct_dish_count": 0.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 5.012328529119259e-06,
+      "nsfw_score": 0.0050936536863446236,
+      "ready_to_eat_score": 5.012328529119259e-06
+    },
+    "divergence": false
+  },
+  {
+    "filename": "images (4).jpeg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "L4 Context: Image not recognized as food (packaged or processed food products)"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 59.38046817704307,
+      "glare_percentage": 0.00011892727597074389,
+      "blur_variance": 1417.8205349279642,
+      "combined_blur_score": 0.005601198332650292,
+      "contrast_std_dev": 60.562244128120376,
+      "dynamic_range": 169.0,
+      "food_object_count": 1.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.03489769250154495,
+      "nsfw_score": 0.0032147958409041166,
+      "ready_to_eat_score": 0.03489769250154495
+    },
+    "divergence": false
+  },
+  {
+    "filename": "symmetrical-food-arrangement-plate-goldenbrown-white-hues-round-form-single-item-rests-centered-surface-contrasts-399915095.webp",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Image is too blurry (score=0.67): laplacian_var=108.3, tenengrad=1570.6, fft_ratio=0.600"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 193.83364318706697,
+      "glare_percentage": 0.0098729792147806,
+      "blur_variance": 108.28847573888325,
+      "combined_blur_score": 0.6679585941076027,
+      "contrast_std_dev": 47.38288295126604,
+      "dynamic_range": 143.0,
+      "food_object_count": 1.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.9889091849327087,
+      "nsfw_score": 0.00020245595078449696,
+      "ready_to_eat_score": 0.9889091849327087
+    },
+    "divergence": false
+  },
+  {
+    "filename": "blurrrr.jpeg",
+    "primary_model_status": "BLOCK",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Image is too blurry (score=0.82): laplacian_var=10.5, tenengrad=1343.3, fft_ratio=0.339"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 85.39954522985664,
+      "glare_percentage": 0.05935739001482946,
+      "blur_variance": 10.549205946616269,
+      "combined_blur_score": 0.8236776209912604,
+      "contrast_std_dev": 69.04480257786332,
+      "dynamic_range": 246.0,
+      "food_object_count": 0.0,
+      "distinct_dish_count": 0.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.9959346055984497,
+      "nsfw_score": 0.00010200376709690318,
+      "ready_to_eat_score": 0.9959346055984497
+    },
+    "divergence": false
+  },
+  {
+    "filename": "delicious-ground-beef-tacos-with-fresh-toppings_191095-86352.avif",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Acceptable sharpness (blur_score=0.30)",
+      "L4 Context: Image not recognized as food (None)"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 206.3133053323594,
+      "glare_percentage": 0.31419284149013876,
+      "blur_variance": 542.1564239970497,
+      "combined_blur_score": 0.3029507808224459,
+      "contrast_std_dev": 58.07684462964054,
+      "dynamic_range": 175.0,
+      "food_object_count": 2.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0
+    },
+    "divergence": false
+  },
+  {
+    "filename": "samplee.jpeg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "L3 Geometry: Multiple food items detected"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 119.0279706367995,
+      "glare_percentage": 0.004058328525672907,
+      "blur_variance": 3940.518143166926,
+      "combined_blur_score": 0.0,
+      "contrast_std_dev": 52.56667944202032,
+      "dynamic_range": 175.0,
+      "food_object_count": 2.0,
+      "distinct_dish_count": 2.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.8226539492607117,
+      "nsfw_score": 0.0023243131581693888,
+      "ready_to_eat_score": 0.8226539492607117
+    },
+    "divergence": false
+  },
+  {
+    "filename": "Screenshot from 2025-11-20 16-00-26.png",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Acceptable sharpness (blur_score=0.08)",
+      "L4 Context: Image not recognized as food (packaged or processed food products)"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 238.04652377878924,
+      "glare_percentage": 0.6923915139018114,
+      "blur_variance": 2035.5006787201673,
+      "combined_blur_score": 0.07567680188301282,
+      "contrast_std_dev": 37.138548679723954,
+      "dynamic_range": 36.0,
+      "food_object_count": 0.0,
+      "distinct_dish_count": 0.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.0016037489986047149,
+      "nsfw_score": 0.016644660383462906,
+      "ready_to_eat_score": 0.0016037489986047149
+    },
+    "divergence": false
+  },
+  {
+    "filename": "blur.jpeg",
+    "primary_model_status": "BLOCK",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Image is too blurry (score=0.64): laplacian_var=56.8, tenengrad=7788.5, fft_ratio=0.434"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 163.0752895752896,
+      "glare_percentage": 0.12486566094813517,
+      "blur_variance": 56.79205076360054,
+      "combined_blur_score": 0.6355571756307474,
+      "contrast_std_dev": 72.49098677234056,
+      "dynamic_range": 220.0,
+      "food_object_count": 0.0,
+      "distinct_dish_count": 0.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.9856717586517334,
+      "nsfw_score": 0.0002982269797939807,
+      "ready_to_eat_score": 0.9856717586517334
+    },
+    "divergence": false
+  },
+  {
+    "filename": "fires.jpg",
+    "primary_model_status": "PASS",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Image is too blurry (score=0.62): laplacian_var=153.2, tenengrad=3546.1, fft_ratio=0.590"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 111.67968318540434,
+      "glare_percentage": 7.273175542406311e-05,
+      "blur_variance": 153.17516394176292,
+      "combined_blur_score": 0.6150069752604583,
+      "contrast_std_dev": 52.52544071716832,
+      "dynamic_range": 163.0,
+      "food_object_count": 1.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.3274565637111664,
+      "nsfw_score": 0.0011008366709575057,
+      "ready_to_eat_score": 0.3274565637111664
+    },
+    "divergence": true
+  },
+  {
+    "filename": "images (6).jpeg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "L3 Geometry: Multiple food items detected",
+      "L4 Context: Image not recognized as food (spoiled, moldy, or rotten food)"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 135.49820168902136,
+      "glare_percentage": 0.012757078986587183,
+      "blur_variance": 3793.114968254335,
+      "combined_blur_score": 0.0,
+      "contrast_std_dev": 79.65275745533552,
+      "dynamic_range": 230.0,
+      "food_object_count": 3.0,
+      "distinct_dish_count": 2.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.13238748908042908,
+      "nsfw_score": 0.00014389771968126297,
+      "ready_to_eat_score": 0.13238748908042908
+    },
+    "divergence": false
+  },
+  {
+    "filename": "sampleeee.avif",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Acceptable sharpness (blur_score=0.30)",
+      "L4 Context: Image not recognized as food (None)"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 206.3133053323594,
+      "glare_percentage": 0.31419284149013876,
+      "blur_variance": 542.1564239970497,
+      "combined_blur_score": 0.3029507808224459,
+      "contrast_std_dev": 58.07684462964054,
+      "dynamic_range": 175.0,
+      "food_object_count": 2.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0
+    },
+    "divergence": false
+  },
+  {
+    "filename": "heart-jelly-sweets-surrounding-cookie-platter-marble-surface_114579-75319.avif",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "Acceptable sharpness (blur_score=0.30)",
+      "L4 Context: Image not recognized as food (None)"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 206.3133053323594,
+      "glare_percentage": 0.31419284149013876,
+      "blur_variance": 542.1564239970497,
+      "combined_blur_score": 0.3029507808224459,
+      "contrast_std_dev": 58.07684462964054,
+      "dynamic_range": 175.0,
+      "food_object_count": 2.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0
+    },
+    "divergence": false
+  },
+  {
+    "filename": "images (5).jpeg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "PASS",
+    "reasons": [],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 113.39982116244411,
+      "glare_percentage": 7.948335817188276e-05,
+      "blur_variance": 1853.9874069036046,
+      "combined_blur_score": 0.0,
+      "contrast_std_dev": 51.0261817210646,
+      "dynamic_range": 160.0,
+      "food_object_count": 0.0,
+      "distinct_dish_count": 0.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.5793675184249878,
+      "nsfw_score": 0.00024009830667637289,
+      "ready_to_eat_score": 0.5793675184249878
+    },
+    "divergence": false
+  },
+  {
+    "filename": "images (1).jpeg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "PASS",
+    "reasons": [],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 70.32519647535128,
+      "glare_percentage": 0.02482733984281972,
+      "blur_variance": 742.7987809434591,
+      "combined_blur_score": 0.24192124748123692,
+      "contrast_std_dev": 64.92182989713768,
+      "dynamic_range": 210.0,
+      "food_object_count": 4.0,
+      "distinct_dish_count": 1.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.4145675301551819,
+      "nsfw_score": 0.003250417299568653,
+      "ready_to_eat_score": 0.4145675301551819
+    },
+    "divergence": false
+  },
+  {
+    "filename": "stock-photo-a-group-shot-of-multiple-food-items-2003936942.jpg",
+    "primary_model_status": "UNKNOWN",
+    "guardrail_status": "BLOCK",
+    "reasons": [
+      "L3 Geometry: Multiple food items detected"
+    ],
+    "scores": {
+      "injection_score": 0.0,
+      "semantic_similarity": 0.07742218673229218,
+      "policy_score": 0.0,
+      "food_domain_score": 0.6009842157363892,
+      "darkness_score": 109.43113125,
+      "glare_percentage": 0.0020508333333333333,
+      "blur_variance": 1481.0379080155662,
+      "combined_blur_score": 0.011197205952235612,
+      "contrast_std_dev": 66.13230392878059,
+      "dynamic_range": 205.0,
+      "food_object_count": 9.0,
+      "distinct_dish_count": 8.0,
+      "liquid_dish_count": 0.0,
+      "food_score": 0.5718610286712646,
+      "nsfw_score": 1.4717940757691395e-05,
+      "ready_to_eat_score": 0.5718610286712646
+    },
+    "divergence": false
+  }
+]

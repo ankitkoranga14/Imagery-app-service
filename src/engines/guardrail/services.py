@@ -10,11 +10,18 @@ import torch
 import cv2
 import numpy as np
 from PIL import Image
-from typing import Dict, Optional, List, Any, Tuple
+from typing import Dict, Optional, List, Any, Tuple, Union
+import functools
 from sentence_transformers import util
 from src.engines.guardrail.repositories import MLRepository, CacheRepository, LogRepository
 from src.engines.guardrail.schemas import GuardrailRequestDTO, GuardrailResponseDTO, GuardrailStatus
 from src.engines.guardrail.models import GuardrailLog
+from src.engines.guardrail.kitchen_optimizations import (
+    KitchenSceneOptimizer,
+    KITCHEN_CONF_THRESHOLD,
+    KITCHEN_IOU_THRESHOLD,
+    KITCHEN_PREP_MODE_MAX_CLUSTERS
+)
 
 # Import metrics for tracking (Phase 4)
 try:
@@ -32,6 +39,39 @@ except ImportError:
     METRICS_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
+
+
+# =============================================================================
+# CACHE DECORATOR
+# =============================================================================
+
+def functional_cache(func):
+    """Decorator for functional caching of validation results.
+    
+    Checks L0 cache before executing the validation flow.
+    """
+    @functools.wraps(func)
+    async def wrapper(self, request: GuardrailRequestDTO, *args, **kwargs):
+        level_start = time.time()
+        input_hash = await self.cache_repo.compute_hash(request.prompt, request.image_bytes)
+        cached = await self.cache_repo.get(input_hash)
+        
+        if cached:
+            res = GuardrailResponseDTO(**cached)
+            res.metadata["cache_hit"] = True
+            res.metadata["cache_check_ms"] = (time.time() - level_start) * 1000
+            logger.info(f"[Guardrail] Cache HIT - returning cached result")
+            
+            if METRICS_AVAILABLE:
+                record_guardrail_cache_hit()
+            
+            return res
+            
+        if METRICS_AVAILABLE:
+            record_guardrail_cache_miss()
+            
+        return await func(self, request, input_hash=input_hash, *args, **kwargs)
+    return wrapper
 
 
 # =============================================================================
@@ -79,19 +119,20 @@ PHYSICS_MIN_CONTRAST_SD = 25              # Minimum std dev for contrast
 PHYSICS_MIN_DYNAMIC_RANGE = 60            # Minimum p95-p5 range
 
 # BLUR THRESHOLDS (Multi-method ensemble)
-PHYSICS_BLUR_LAPLACIAN_THRESHOLD = 100    # Laplacian variance threshold (higher = sharper)
-PHYSICS_BLUR_TENENGRAD_THRESHOLD = 500    # Tenengrad (Sobel) threshold
-PHYSICS_BLUR_FFT_THRESHOLD = 0.25         # FFT high-frequency ratio threshold
-PHYSICS_BLUR_COMBINED_THRESHOLD = 0.5     # Combined blur score threshold (0-1, higher = blurrier)
+PHYSICS_BLUR_LAPLACIAN_THRESHOLD = 1000   # Was 300 -> Very high to catch even slightly sharp noise as blurry if variance is low
+PHYSICS_BLUR_TENENGRAD_THRESHOLD = 15000  # Was 8000
+PHYSICS_BLUR_FFT_THRESHOLD = 0.7          # Was 0.6
+PHYSICS_BLUR_COMBINED_THRESHOLD = 0.55     # Was 0.45
 PHYSICS_BLUR_DOWNSAMPLE_SIZE = 512        # Max dimension for blur analysis (for speed)
 
 # GEOMETRY THRESHOLDS
-GEOMETRY_PROXIMITY_THRESHOLD = 0.45       # Was 0.40 → Slightly more lenient
+GEOMETRY_PROXIMITY_THRESHOLD = 0.08       # Was 0.04 -> Increased to allow clustering of burger + fries
 GEOMETRY_MIN_MAIN_DISHES = 2              # Keep - main dishes to trigger block
-GEOMETRY_MIN_ANY_DISHES = 4               # Was 3 → More lenient for sides
+GEOMETRY_MIN_ANY_DISHES = 3               # Was 2 -> More lenient for side dishes
+GEOMETRY_MAX_RAW_FOOD_ITEMS = 4           # Was 3 -> More lenient for complex plates
 
 # CONTEXT THRESHOLDS
-CONTEXT_FOOD_THRESHOLD = 0.30             # Was 0.35 → More inclusive for ethnic cuisine
+CONTEXT_FOOD_THRESHOLD = 0.15             # Was 0.30 → Much more inclusive for valid food images
 CONTEXT_NSFW_THRESHOLD = 0.20             # Was 0.15 → Stricter on NSFW
 CONTEXT_FOREIGN_OBJECT_THRESHOLD = 0.40   # Was 0.30 → More lenient
 CONTEXT_POOR_ANGLE_THRESHOLD = 0.60       # Was 0.50 → More lenient
@@ -356,7 +397,7 @@ class ImageGuardrailService:
     
     # Container/surface classes for grouping
     CONTAINER_CLASSES = {45}  # bowl
-    SURFACE_CLASSES = {45, 60}  # bowl (45), dining_table (60)
+    SURFACE_CLASSES = {45}  # bowl (45), removed dining_table (60) to avoid collapsing whole tables
     
     # Food proxy classes (indicate meal setting)
     FOOD_PROXY_CLASSES = {60, 67}  # dining_table, fork
@@ -658,6 +699,10 @@ class ImageGuardrailService:
         # Downsample for speed
         gray_small = self._downsample_for_blur(gray)
         
+        # CROP: Ignore bottom 10% to avoid watermarks which trick blur detection
+        h_small, w_small = gray_small.shape
+        gray_small = gray_small[0:int(h_small*0.9), :]
+        
         # Method 1: Laplacian variance
         laplacian_var = self._compute_laplacian_variance(gray_small)
         laplacian_normalized = min(laplacian_var / PHYSICS_BLUR_LAPLACIAN_THRESHOLD, 2.0)  # Normalize, cap at 2x
@@ -673,8 +718,8 @@ class ImageGuardrailService:
         fft_blur_score = max(0, 1.0 - (fft_ratio / PHYSICS_BLUR_FFT_THRESHOLD))  # 0=sharp, 1=blurry
         fft_blur_score = min(fft_blur_score, 1.0)
         
-        # Weighted ensemble (Laplacian is most reliable, followed by Tenengrad, then FFT)
-        weights = [0.45, 0.35, 0.20]  # Laplacian, Tenengrad, FFT
+        # Weighted ensemble (FFT and Tenengrad are better for bokeh/out-of-focus)
+        weights = [0.40, 0.30, 0.30]  # Laplacian, Tenengrad, FFT
         combined_blur_score = (
             weights[0] * laplacian_blur_score +
             weights[1] * tenengrad_blur_score +
@@ -699,7 +744,7 @@ class ImageGuardrailService:
             fft_blur_score > 0.6
         ])
         
-        is_blurry = combined_blur_score > PHYSICS_BLUR_COMBINED_THRESHOLD and methods_detecting_blur >= 2
+        is_blurry = combined_blur_score > PHYSICS_BLUR_COMBINED_THRESHOLD and methods_detecting_blur >= 1
         
         if is_blurry:
             reason = (
@@ -797,6 +842,14 @@ class ImageGuardrailService:
                     "glare": glare_metrics,
                     "contrast": contrast_metrics,
                     "blur": blur_metrics
+                },
+                "scores": {
+                    "darkness_score": mean_brightness,
+                    "glare_percentage": glare_metrics["blown_percentage"],
+                    "blur_variance": blur_variance,
+                    "combined_blur_score": combined_blur_score,
+                    "contrast_std_dev": contrast_metrics["std_dev"],
+                    "dynamic_range": contrast_metrics["dynamic_range"],
                 }
             }
             
@@ -905,7 +958,7 @@ class ImageGuardrailService:
         return (expanded_surface[0] <= food_center_x <= expanded_surface[2] and
                 expanded_surface[1] <= food_center_y <= expanded_surface[3])
     
-    def _is_grid_layout(self, centers: List[Tuple[float, float]], threshold: float = 0.15) -> bool:
+    def _is_grid_layout(self, centers: List[Tuple[float, float]], threshold: float = 0.1) -> bool:
         """Detect if items are arranged in a grid pattern (bento box).
         
         Returns True if items appear to be in a grid layout.
@@ -930,7 +983,7 @@ class ImageGuardrailService:
         
         return False
     
-    def _is_circular_layout(self, centers: List[Tuple[float, float]], img_width: int, img_height: int, threshold: float = 0.2) -> bool:
+    def _is_circular_layout(self, centers: List[Tuple[float, float]], img_width: int, img_height: int, threshold: float = 0.1) -> bool:
         """Detect if items are arranged in a circular pattern (thali).
         
         Returns True if items appear to be arranged around a center point.
@@ -1015,11 +1068,11 @@ class ImageGuardrailService:
             centers.append((cx, cy))
         
         # Check for grid layout (bento box)
-        if self._is_grid_layout(centers):
+        if self._is_grid_layout(centers, threshold=0.1):
             return True, "grid_layout_bento"
         
         # Check for circular layout (thali)
-        if self._is_circular_layout(centers, img_width, img_height):
+        if self._is_circular_layout(centers, img_width, img_height, threshold=0.1):
             return True, "circular_layout_thali"
         
         # Check for size dominance (one main dish with sides)
@@ -1032,7 +1085,7 @@ class ImageGuardrailService:
         total_area = sum(areas)
         if total_area > 0:
             largest_ratio = max(areas) / total_area
-            if largest_ratio > 0.6:
+            if largest_ratio > 0.65:          # Was 0.85 -> Relaxed to allow Thali (rice/bread often dominates)
                 return True, "dominant_main_dish"
         
         return False, "no_pattern"
@@ -1099,14 +1152,14 @@ class ImageGuardrailService:
             device = self.ml_repo.device
             use_half = device == "cuda"  # FP16 for GPU
             
-            # Run inference with optimized settings for YOLOv11
-            # Lower confidence threshold (0.25) for better ethnic food detection
+            # Run inference with SOTA kitchen-optimized settings
+            # Research-based thresholds from EPIC-KITCHENS VISOR benchmark
             results = model(
                 img_bgr, 
                 verbose=False,
-                conf=0.25,      # Lower threshold for ethnic cuisine
-                iou=0.45,       # Standard NMS IoU threshold
-                half=use_half,  # FP16 on GPU for faster inference
+                conf=KITCHEN_CONF_THRESHOLD,  # 0.50: Filter reflections/glints on metal surfaces
+                iou=KITCHEN_IOU_THRESHOLD,    # 0.30: Stricter NMS for textured foods
+                half=use_half,                # FP16 on GPU for faster inference
                 device=device
             )
             
@@ -1150,9 +1203,13 @@ class ImageGuardrailService:
                     if class_id in self.BEVERAGE_CLASSES:
                         beverage_detections.append(detection)
                     
-                    # Check if it's a food class (excluding containers)
+                    # Check if it's a food class (including containers)
                     if class_id in self.FOOD_CLASS_INDICES:
-                        if class_id not in self.CONTAINER_CLASSES:
+                        # Include bowls if they appear to be filled with food
+                        if class_id == 45: # bowl
+                            if self._check_bowl_filled(img_bgr, bbox):
+                                detected_foods.append(detection)
+                        elif class_id not in self.CONTAINER_CLASSES:
                             detected_foods.append(detection)
                         
                         if class_id in self.MAIN_DISH_CLASSES:
@@ -1173,58 +1230,75 @@ class ImageGuardrailService:
                 # Also count cups/glasses for beverages
                 liquid_dish_count += len(beverage_detections)
             
-            # Count raw food items
-            raw_food_count = len(detected_foods)
-            main_dish_count = len(main_dishes)
+            # =================================================================
+            # SOTA KITCHEN SCENE UNDERSTANDING PIPELINE
+            # Based on EPIC-KITCHENS VISOR & SafeCOOK Research
+            # =================================================================
             
-            # Determine distinct dish count
-            distinct_dish_count = raw_food_count
-            cluster_indices = []
+            # Initialize kitchen optimizer
+            kitchen_optimizer = KitchenSceneOptimizer(img_width, img_height)
             
+            # Apply SOTA filtering and clustering pipeline
+            # This handles: reflection removal, area filtering, vessel hierarchy, prep mode
+            filtered_foods, optimized_cluster_count, cluster_indices, kitchen_metadata = \
+                kitchen_optimizer.filter_and_cluster_detections(detected_foods, img_bgr)
+            
+            # Update counts based on filtered results
+            raw_food_count = len(filtered_foods)
+            distinct_dish_count = optimized_cluster_count
+            
+            # Extract prep mode info
+            is_prep_mode = kitchen_metadata.get("is_prep_mode", False)
+            prep_mode_reason = kitchen_metadata.get("prep_mode_reason", "")
+            
+            # Legacy meal pattern detection (kept for backward compatibility)
+            is_single_meal = False
+            pattern_type = "no_pattern"
             if raw_food_count > 1:
-                # Strategy 1: Check for meal patterns (bento, thali)
-                is_single_meal, pattern_type = self._detect_meal_pattern(detected_foods, img_width, img_height)
-                
+                is_single_meal, pattern_type = self._detect_meal_pattern(filtered_foods, img_width, img_height)
                 if is_single_meal:
                     distinct_dish_count = 1
-                    logger.info(f"[Guardrail] Detected {pattern_type} pattern - treating as single meal")
-                
-                # Strategy 2: Check if all on single surface
-                elif surface_boxes:
-                    largest_surface = max(surface_boxes, key=lambda b: (b[2]-b[0]) * (b[3]-b[1]))
-                    foods_on_surface = sum(
-                        1 for food in detected_foods 
-                        if self._is_box_inside_surface(food["bbox"], largest_surface)
-                    )
-                    
-                    if foods_on_surface == raw_food_count:
-                        distinct_dish_count = 1
-                        logger.info(f"[Guardrail] All {raw_food_count} items on single surface")
-                    else:
-                        distinct_dish_count, cluster_indices = self._cluster_food_items(detected_foods, img_width, img_height)
-                else:
-                    # Strategy 3: Spatial clustering
-                    distinct_dish_count, cluster_indices = self._cluster_food_items(detected_foods, img_width, img_height)
+                    logger.info(f"[Guardrail] Legacy pattern detected: {pattern_type}")
             
             # Add liquid dishes if detected
             if liquid_dish_count > 0 and raw_food_count == 0:
                 distinct_dish_count = liquid_dish_count
             
-            # Cluster main dishes
+            # Re-filter main dishes (apply same optimizations)
+            filtered_main_dishes = [d for d in main_dishes if d in filtered_foods]
+            main_dish_count = len(filtered_main_dishes)
+            
+            # Cluster main dishes with SOTA method
             if main_dish_count > 1:
-                main_dish_clusters, _ = self._cluster_food_items(main_dishes, img_width, img_height)
+                _, main_dish_clusters, _, _ = kitchen_optimizer.filter_and_cluster_detections(
+                    filtered_main_dishes, img_bgr
+                )
             else:
                 main_dish_clusters = main_dish_count
             
-            # Decision logic with prompt awareness
-            # Allow more dishes if prompt indicates multiple
+            # Decision logic with SOTA optimizations
             expected_count = max(expected_count, 1)
-            allowed_dish_margin = 1  # Allow 1 extra dish
+            allowed_dish_margin = 0
             
-            # Block conditions (more lenient)
+            # Prep mode adjustment: Allow more clusters during food preparation
+            effective_max_clusters = (
+                KITCHEN_PREP_MODE_MAX_CLUSTERS if is_prep_mode 
+                else GEOMETRY_MIN_ANY_DISHES
+            )
+            
+            logger.info(
+                f"[Kitchen Optimizer] SOTA Results: "
+                f"filtered={raw_food_count}/{kitchen_metadata['original_detection_count']}, "
+                f"clusters={distinct_dish_count}, prep_mode={is_prep_mode}, "
+                f"reflections_removed={kitchen_metadata['reflections_removed']}, "
+                f"small_removed={kitchen_metadata['small_areas_removed']}"
+            )
+            
+            # Block conditions with prep mode awareness
             has_multiple_dishes = (
                 (main_dish_clusters >= GEOMETRY_MIN_MAIN_DISHES) or 
-                (distinct_dish_count >= GEOMETRY_MIN_ANY_DISHES)
+                (distinct_dish_count >= effective_max_clusters) or
+                (raw_food_count >= GEOMETRY_MAX_RAW_FOOD_ITEMS and not is_single_meal and not is_prep_mode)
             )
             
             # Override: If detected count is within expected + margin, PASS
@@ -1233,9 +1307,9 @@ class ImageGuardrailService:
             
             elapsed_ms = (time.time() - start_time) * 1000
             
-            # Clean up for JSON
+            # Clean up for JSON (use filtered_foods instead of detected_foods)
             clean_foods = [{k: v.tolist() if isinstance(v, np.ndarray) else v 
-                           for k, v in d.items()} for d in detected_foods]
+                           for k, v in d.items()} for d in filtered_foods]
             clean_all = [{k: v.tolist() if isinstance(v, np.ndarray) else v 
                          for k, v in d.items()} for d in all_detections]
             
@@ -1259,6 +1333,21 @@ class ImageGuardrailService:
                 "geometry_passed": not has_multiple_dishes,
                 "geometry_time_ms": elapsed_ms,
                 "model_variant": yolo_variant_str,
+                # SOTA Kitchen Optimization Metadata
+                "kitchen_optimizer": {
+                    "is_prep_mode": is_prep_mode,
+                    "prep_mode_reason": prep_mode_reason,
+                    "reflections_removed": kitchen_metadata.get("reflections_removed", 0),
+                    "small_areas_removed": kitchen_metadata.get("small_areas_removed", 0),
+                    "vessel_count": kitchen_metadata.get("vessel_count", 0),
+                    "clustering_method": kitchen_metadata.get("clustering_method", "unknown"),
+                    "effective_max_clusters": effective_max_clusters,
+                },
+                "scores": {
+                    "food_object_count": raw_food_count,
+                    "distinct_dish_count": distinct_dish_count,
+                    "liquid_dish_count": liquid_dish_count,
+                },
                 "intermediate_results": {
                     "raw_food_count": raw_food_count,
                     "distinct_dish_count": distinct_dish_count,
@@ -1266,17 +1355,22 @@ class ImageGuardrailService:
                     "expected_count": expected_count,
                     "liquid_dish_count": liquid_dish_count,
                     "decision": "BLOCK" if has_multiple_dishes else "PASS",
-                    "yolo_variant": yolo_variant_str
+                    "yolo_variant": yolo_variant_str,
+                    "is_prep_mode": is_prep_mode,
+                    "pattern_detected": pattern_type,
                 }
             }
             
             logger.info(
                 f"[Guardrail] Level: Geometry | Status: {'FAIL' if has_multiple_dishes else 'PASS'} | "
                 f"Model: {yolo_variant_str} | "
+                f"SOTA: prep_mode={is_prep_mode}, reflections_removed={kitchen_metadata.get('reflections_removed', 0)}, "
+                f"small_removed={kitchen_metadata.get('small_areas_removed', 0)} | "
                 f"Metrics: raw={raw_food_count}, clusters={distinct_dish_count}, "
                 f"main_dishes={main_dish_count}, main_clusters={main_dish_clusters}, "
                 f"expected={expected_count}, liquid={liquid_dish_count}, "
-                f"items={[d['class_name'] for d in detected_foods]}, "
+                f"effective_max={effective_max_clusters}, "
+                f"items={[d['class_name'] for d in filtered_foods]}, "
                 f"time={elapsed_ms:.1f}ms"
             )
             
@@ -1446,7 +1540,15 @@ class ImageGuardrailService:
         """Check advanced image context using CLIP."""
         return await asyncio.to_thread(self._sync_check_context_advanced, image_base64)
     
-    def _sync_check_food_nsfw_clip(self, image_base64: str, yolo_food_detected: bool = False) -> Dict[str, Any]:
+    # ==========================================================================
+    # CONTEXT CHECKS (Enhanced)
+    # ==========================================================================
+    
+    async def check_food_nsfw_clip(self, image_base64: str, yolo_food_detected: bool = False, sensitivity_override: float = None) -> Dict[str, Any]:
+        """Check image for food/NSFW content using CLIP."""
+        return await asyncio.to_thread(self._sync_check_food_nsfw_clip, image_base64, yolo_food_detected, sensitivity_override)
+
+    def _sync_check_food_nsfw_clip(self, image_base64: str, yolo_food_detected: bool = False, sensitivity_override: float = None) -> Dict[str, Any]:
         """Enhanced CLIP check with ensemble approach.
         
         Features:
@@ -1481,109 +1583,85 @@ class ImageGuardrailService:
                 
                 logits = 100.0 * image_features @ text_features.T
                 
-                # Apply temperature calibration for better F1
-                # Research shows T=1.0-1.5 improves guardrail accuracy
+                # Apply temperature calibration
                 calibrated_logits = self.ml_repo.calibrate_logits(logits)
                 probs = torch.nn.functional.softmax(calibrated_logits, dim=-1)
                 probs = probs.cpu().numpy()[0]
             
-            # Extract probabilities
-            ready_to_eat_prob = float(probs[0])
-            raw_food_prob = float(probs[1])
-            packaged_food_prob = float(probs[2])
-            pet_food_prob = float(probs[3])
-            spoiled_prob = float(probs[4])
-            person_prob = float(probs[5])
-            animal_prob = float(probs[6])
-            nature_prob = float(probs[7])
-            object_prob = float(probs[8])
-            nsfw_prob = float(probs[9])
+            # Map probabilities to labels
+            label_probs = {label: float(prob) for label, prob in zip(self.labels, probs)}
             
-            # Calculate composite food score
-            # Ready-to-eat is the target; raw/packaged are partial
-            food_score = ready_to_eat_prob + (raw_food_prob * 0.3) + (packaged_food_prob * 0.2)
+            # Extract key scores
+            food_score = label_probs["a plated meal ready to eat"]
+            raw_food_score = label_probs["raw ingredients or uncooked food"]
+            packaged_food_score = label_probs["packaged or processed food products"]
+            pet_food_score = label_probs["pet food or animal feed"]
+            spoiled_food_score = label_probs["spoiled, moldy, or rotten food"]
+            nsfw_score = label_probs["an explicit, nsfw, or suggestive photo"]
             
-            # Find top category
-            max_idx = probs.argmax()
+            # Decision logic
+            # Use sensitivity override if provided (e.g., for ethnic food)
+            # Ensure override is actually more lenient than the global threshold
+            food_threshold = sensitivity_override if sensitivity_override is not None else CONTEXT_FOOD_THRESHOLD
+            food_threshold = min(food_threshold, CONTEXT_FOOD_THRESHOLD)
             
-            # Determine if food (with ensemble from YOLO)
-            # Use lower threshold to reduce ethnic cuisine bias
-            is_food = (max_idx <= 4 and ready_to_eat_prob > CONTEXT_FOOD_THRESHOLD)
+            is_food = food_score > food_threshold
+            is_nsfw = nsfw_score > CONTEXT_NSFW_THRESHOLD
+            is_pet_food = pet_food_score > 0.40
+            is_spoiled_food = spoiled_food_score > 0.80  # Increased further to reduce false positives
             
-            # Ensemble: If YOLO detected food objects, be more lenient
-            # MobileCLIP2 has better ethnic cuisine detection, so lower threshold
-            yolo_ensemble_threshold = 0.20 if hasattr(self.ml_repo, 'clip_variant') else 0.25
-            if yolo_food_detected and ready_to_eat_prob > yolo_ensemble_threshold:
-                is_food = True
-            
-            # Additional check: If food score is low but non-food scores are also low, might be ethnic cuisine
-            if not is_food and ready_to_eat_prob > 0.20:
-                non_food_max = max(person_prob, animal_prob, nature_prob, object_prob)
-                if non_food_max < 0.4:
+            # Ensemble with YOLO: If YOLO detected food, be much more lenient with CLIP
+            if yolo_food_detected:
+                # If YOLO is confident, we only block if CLIP is EXTREMELY sure it's NOT food
+                # or if it's definitely NSFW/Pet food.
+                if not is_food and food_score > 0.01: 
                     is_food = True
-            
-            # Check for not-ready-to-eat issues
-            is_raw = raw_food_prob > 0.5
-            is_packaged = packaged_food_prob > 0.5
-            is_pet_food = pet_food_prob > 0.4
-            is_spoiled = spoiled_prob > 0.4
-            
-            is_nsfw = nsfw_prob > CONTEXT_NSFW_THRESHOLD
+                    logger.info(f"[Guardrail] CLIP food score very low ({food_score:.4f}) but YOLO detected food - PASSING via ensemble")
             
             elapsed_ms = (time.time() - start_time) * 1000
             
-            # Get model variant info for logging/debugging
+            # Get model variant info
             clip_variant = getattr(self.ml_repo, 'clip_variant', None)
             clip_variant_str = clip_variant.value if clip_variant else "unknown"
             
             result = {
                 "food_score": food_score,
-                "ready_to_eat_score": ready_to_eat_prob,
-                "nsfw_score": nsfw_prob,
-                "top_category": self.labels[max_idx],
-                "top_category_idx": int(max_idx),
+                "ready_to_eat_score": food_score,
+                "nsfw_score": nsfw_score,
+                "spoiled_food_score": spoiled_food_score,
                 "is_food": is_food,
-                "is_raw_food": is_raw,
-                "is_packaged_food": is_packaged,
-                "is_pet_food": is_pet_food,
-                "is_spoiled_food": is_spoiled,
                 "is_nsfw": is_nsfw,
+                "is_pet_food": is_pet_food,
+                "is_spoiled_food": is_spoiled_food,
+                "top_category": max(label_probs, key=label_probs.get),
+                "context_passed": is_food and not is_nsfw and not is_pet_food and not is_spoiled_food,
                 "context_time_ms": elapsed_ms,
                 "model_variant": clip_variant_str,
+                "scores": {
+                    "food_score": food_score,
+                    "nsfw_score": nsfw_score,
+                    "ready_to_eat_score": food_score,
+                },
                 "intermediate_results": {
-                    "all_probs": {label.split(",")[0]: float(prob) for label, prob in zip(self.labels, probs)},
+                    "label_probs": label_probs,
                     "yolo_food_detected": yolo_food_detected,
-                    "ensemble_applied": yolo_food_detected and ready_to_eat_prob > yolo_ensemble_threshold,
-                    "clip_variant": clip_variant_str,
-                    "temperature": self.clip_temperature
+                    "clip_variant": clip_variant_str
                 }
             }
-            
-            context_passed = is_food and not is_nsfw and not is_pet_food and not is_spoiled
-            
-            logger.info(
-                f"[Guardrail] Level: Context | Status: {'FAIL' if not context_passed else 'PASS'} | "
-                f"Model: {clip_variant_str} | "
-                f"Metrics: food_score={food_score:.3f}, ready_to_eat={ready_to_eat_prob:.3f}, "
-                f"nsfw_score={nsfw_prob:.3f}, top_category={self.labels[max_idx][:30]}, "
-                f"is_food={is_food}, is_nsfw={is_nsfw}, time={elapsed_ms:.1f}ms"
-            )
             
             return convert_numpy_types(result)
             
         except Exception as e:
             logger.error(f"[Guardrail] Level: Context | Status: ERROR | Exception: {str(e)}")
-            logger.error(traceback.format_exc())
             return {
-                "error": str(e),
                 "food_score": 0.0,
                 "nsfw_score": 0.0,
+                "is_food": False,
+                "is_nsfw": False,
+                "context_passed": False,
+                "context_error": str(e),
                 "context_skipped": True
             }
-    
-    async def check_food_nsfw_clip(self, image_base64: str, yolo_food_detected: bool = False) -> Dict[str, Any]:
-        """Check image for food/NSFW content using CLIP."""
-        return await asyncio.to_thread(self._sync_check_food_nsfw_clip, image_base64, yolo_food_detected)
     
     def _sync_classify_food_enhanced(self, image_base64: str, yolo_detections: List[Dict]) -> Dict[str, Any]:
         """Enhanced food classification using MobileCLIP2's superior zero-shot capability.
@@ -1799,17 +1877,19 @@ class GuardrailService:
             logger.error(f"[Guardrail] Model preloading failed: {str(e)}")
             return False
     
-    async def validate(self, request: GuardrailRequestDTO) -> GuardrailResponseDTO:
+    @functional_cache
+    async def validate(self, request: GuardrailRequestDTO, input_hash: str = None) -> GuardrailResponseDTO:
         """High-performance, cost-effective image validation pipeline.
         
-        Implements fail-fast strategy with the following order:
-        1. Level 0: Cache Check (instant)
-        2. Level 1: Text Validation (fast, no ML models)
-        3. Level 2: Physics (OpenCV) - Fail Fast on darkness/glare/contrast
-        4. Level 3: Geometry (YOLOv8) - Fail on multiple food items
-        5. Level 4: Context (CLIP) - Food/NSFW + Angle/Foreign Objects
-        
-        Each level short-circuits if a failure is detected, saving compute costs.
+        Tiered Validation Flow (2026-optimized):
+        1. Level 0: Cache Check (handled by @functional_cache)
+        2. Level 1 & 2: Parallel Text (L1) and Physics (L2)
+           - Immediate Exit: Policy violation or Fatal Quality Issue (>90% black/blurred)
+        3. Level 3: Smart Geometry (YOLOv11n)
+           - High-Confidence Fail: foreign_object, spoilage, pest >= 0.90
+           - High-Confidence Pass: food >= 0.95 (Skips L4)
+        4. Level 4: Nuanced Inspection (MobileCLIP2)
+           - Triggered ONLY if YOLO results are "Unsure" (0.40 - 0.75 confidence)
         """
         start_time = time.time()
         
@@ -1820,130 +1900,111 @@ class GuardrailService:
             "levels_failed": [],
             "levels_skipped": [],
             "timings": {},
-            "intermediate_results": {}
+            "intermediate_results": {},
+            "exit_level": None
         }
         
         all_scores = {}
         reasons = []
         
-        logger.info(f"[Guardrail] Starting validation pipeline for prompt: '{request.prompt[:50]}...'")
+        logger.info(f"[Guardrail] Starting tiered validation for prompt: '{request.prompt[:50]}...'")
         
         # ========================================================================
-        # Level 0: Cache Check
-        # ========================================================================
-        level_start = time.time()
-        input_hash = await self.cache_repo.compute_hash(request.prompt, request.image_bytes)
-        cached = await self.cache_repo.get(input_hash)
-        validation_trace["timings"]["cache_check_ms"] = (time.time() - level_start) * 1000
-        
-        if cached:
-            res = GuardrailResponseDTO(**cached)
-            res.metadata["cache_hit"] = True
-            res.metadata["validation_trace"] = validation_trace
-            logger.info(f"[Guardrail] Cache HIT - returning cached result")
-            
-            # Record cache hit metric
-            if METRICS_AVAILABLE:
-                record_guardrail_cache_hit()
-            
-            return res
-        
-        # Record cache miss metric
-        if METRICS_AVAILABLE:
-            record_guardrail_cache_miss()
-        
-        # ========================================================================
-        # Level 1: Text Validation
+        # Level 1 & 2: Parallel Initialization (Text & Physics)
         # ========================================================================
         level_start = time.time()
-        validation_trace["levels_executed"].append("text")
+        validation_trace["levels_executed"].extend(["L1_TEXT", "L2_PHYSICS"])
         
-        # Run text checks
-        injection = await self.text_service.check_injection(request.prompt)
-        all_scores.update({
-            "injection_score": injection["injection_score"],
-            "semantic_similarity": injection.get("semantic_similarity", 0.0)
-        })
-        if injection["injection_score"] >= 0.5:
-            reasons.append(f"Prompt injection detected: {injection.get('detected_patterns', [])}")
+        # Run L1 and L2 in parallel
+        l1_task = self._run_l1_text_validation(request.prompt)
+        l2_task = self.image_service.check_physics(request.image_bytes) if request.image_bytes else asyncio.sleep(0, result={})
         
-        policy = await self.text_service.check_policy(request.prompt)
-        all_scores.update({"policy_score": policy["policy_score"]})
-        if policy["policy_score"] >= 0.5:
-            reasons.append(f"Policy violation: {policy.get('violations', [])}")
+        l1_result, l2_result = await asyncio.gather(l1_task, l2_task)
         
-        food_text = await self.text_service.check_food_domain(request.prompt)
-        all_scores.update({
-            "food_domain_score": food_text["food_domain_score"]
-        })
-        if not food_text["is_food_related"]:
-            reasons.append("Prompt is not food-related")
-        
-        # Extract expected dish count from prompt for geometry validation
-        expected_dish_count = self.text_service.extract_expected_dish_count(request.prompt)
-        
-        validation_trace["timings"]["text_validation_ms"] = (time.time() - level_start) * 1000
-        validation_trace["intermediate_results"]["text"] = {
-            "injection": injection,
-            "policy": policy,
-            "food_domain": food_text,
-            "expected_dish_count": expected_dish_count
-        }
-        
-        if reasons:
-            validation_trace["levels_failed"].append("text")
-            logger.info(f"[Guardrail] Level: Text | Status: FAIL | Reasons: {reasons}")
+        # Process L1 Results
+        all_scores.update(l1_result["scores"])
+        validation_trace["timings"]["L1_TEXT_ms"] = l1_result.get("latency_ms", 0.0)
+        if l1_result["reasons"]:
+            reasons.extend(l1_result["reasons"])
+            validation_trace["levels_failed"].append("L1_TEXT")
+            validation_trace["exit_level"] = "L1_EXIT"
         else:
-            validation_trace["levels_passed"].append("text")
-            logger.info(f"[Guardrail] Level: Text | Status: PASS")
-        
-        # ========================================================================
-        # Image Validation Pipeline
-        # ========================================================================
+            validation_trace["levels_passed"].append("L1_TEXT")
+            
+        # Process L2 Results
         if request.image_bytes:
+            all_scores.update(l2_result.get("scores", {}))
+            validation_trace["timings"]["L2_PHYSICS_ms"] = l2_result.get("physics_time_ms", 0.0)
             
-            # ====================================================================
-            # Level 2: Physics (OpenCV) - FAIL FAST
-            # ====================================================================
-            level_start = time.time()
-            validation_trace["levels_executed"].append("physics")
+            # Fatal Quality Issue Check (Immediate Exit)
+            dark_ratio = l2_result.get("dark_pixel_ratio", 0.0)
+            blur_score = l2_result.get("combined_blur_score", 0.0)
             
-            physics_result = await self.image_service.check_physics(request.image_bytes)
+            is_fatal_quality = dark_ratio > 0.90 or blur_score > 0.90
             
-            # Extract scores
-            all_scores["darkness_score"] = physics_result.get("darkness_score", 0.0)
-            all_scores["glare_percentage"] = physics_result.get("glare_percentage", 0.0)
-            all_scores["blur_variance"] = physics_result.get("blur_variance", 0.0)
-            all_scores["combined_blur_score"] = physics_result.get("combined_blur_score", 0.0)
-            all_scores["laplacian_variance"] = physics_result.get("laplacian_variance", 0.0)
-            all_scores["tenengrad"] = physics_result.get("tenengrad", 0.0)
-            all_scores["fft_high_freq_ratio"] = physics_result.get("fft_high_freq_ratio", 0.0)
-            all_scores["contrast_std_dev"] = physics_result.get("contrast_std_dev", 0.0)
-            all_scores["dynamic_range"] = physics_result.get("dynamic_range", 0.0)
-            
-            validation_trace["timings"]["physics_ms"] = physics_result.get("physics_time_ms", 0.0)
-            validation_trace["intermediate_results"]["physics"] = physics_result.get("intermediate_results", {})
-            
-            if physics_result.get("physics_skipped"):
-                validation_trace["levels_skipped"].append("physics")
-                logger.warning("[Guardrail] Level: Physics | Status: SKIPPED due to error")
-            elif not physics_result.get("physics_passed", True):
-                validation_trace["levels_failed"].append("physics")
-                
-                # Build specific failure reasons
-                if physics_result.get("is_too_dark"):
-                    reasons.append(f"Physics: {physics_result.get('darkness_reason', 'Too dark')}")
-                if physics_result.get("is_glary"):
-                    reasons.append(f"Physics: {physics_result.get('glare_reason', 'Glare detected')}")
-                if not physics_result.get("has_contrast", True):
-                    reasons.append(f"Physics: {physics_result.get('contrast_reason', 'Poor contrast')}")
-                if physics_result.get("is_blurry"):
-                    reasons.append(f"Physics: {physics_result.get('blur_reason', 'Image is too blurry')}")
-                
-                # FAIL FAST
-                logger.info(f"[Guardrail] FAIL FAST at Physics level - skipping remaining checks")
-                validation_trace["levels_skipped"].extend(["geometry", "context", "context_advanced"])
-                
+            if is_fatal_quality:
+                reasons.append(f"L2 Fatal Quality Issue: darkness={dark_ratio:.2f}, blur={blur_score:.2f}")
+                validation_trace["levels_failed"].append("L2_PHYSICS")
+                validation_trace["exit_level"] = "L2_FATAL_EXIT"
+            elif not l2_result.get("physics_passed", True):
+                # Non-fatal physics issue, still block but not "fatal exit"
+                reasons.append(l2_result.get("blur_reason") or l2_result.get("darkness_reason") or "Physics check failed")
+                validation_trace["levels_failed"].append("L2_PHYSICS")
+            else:
+                validation_trace["levels_passed"].append("L2_PHYSICS")
+
+        # Immediate Exit for L1/L2
+        if reasons and (validation_trace["exit_level"] in ["L1_EXIT", "L2_FATAL_EXIT"]):
+            logger.info(f"[Guardrail] Immediate Exit at {validation_trace['exit_level']}")
+            validation_trace["levels_skipped"].extend(["L3_GEOMETRY", "L4_CONTEXT"])
+            return await self._build_response(
+                status=GuardrailStatus.BLOCK,
+                reasons=reasons,
+                scores=all_scores,
+                start_time=start_time,
+                validation_trace=validation_trace,
+                request=request,
+                input_hash=input_hash
+            )
+
+        # ========================================================================
+        # Level 3: Smart Geometry & Early-Exit (YOLOv11n)
+        # ========================================================================
+        if not request.image_bytes:
+            return await self._build_response(
+                status=GuardrailStatus.PASS if not reasons else GuardrailStatus.BLOCK,
+                reasons=reasons,
+                scores=all_scores,
+                start_time=start_time,
+                validation_trace=validation_trace,
+                request=request,
+                input_hash=input_hash
+            )
+
+        level_start = time.time()
+        validation_trace["levels_executed"].append("L3_GEOMETRY")
+        
+        expected_dish_count = l1_result["expected_dish_count"]
+        l3_result = await self.image_service.check_geometry(
+            request.image_bytes, 
+            expected_count=expected_dish_count,
+            prompt=request.prompt
+        )
+        
+        all_scores.update(l3_result.get("scores", {}))
+        validation_trace["timings"]["L3_GEOMETRY_ms"] = l3_result.get("geometry_time_ms", 0.0)
+        
+        # Early-Exit Logic
+        yolo_detections = l3_result.get("all_detections", [])
+        
+        # High-Confidence Fail
+        safety_risks = ["foreign_object", "spoilage", "pest"]
+        for risk in safety_risks:
+            risk_detections = [d for d in yolo_detections if d["class_name"] == risk and d["confidence"] >= 0.90]
+            if risk_detections:
+                reasons.append(f"L3 Early Exit: High-confidence {risk} detected ({risk_detections[0]['confidence']:.2f})")
+                validation_trace["levels_failed"].append("L3_GEOMETRY")
+                validation_trace["exit_level"] = "L3_EARLY_EXIT_BLOCK"
                 return await self._build_response(
                     status=GuardrailStatus.BLOCK,
                     reasons=reasons,
@@ -1953,162 +2014,76 @@ class GuardrailService:
                     request=request,
                     input_hash=input_hash
                 )
-            else:
-                validation_trace["levels_passed"].append("physics")
-            
-            # ====================================================================
-            # Level 3+4: Geometry + Context (Optimized Parallel Execution)
-            # ====================================================================
-            # Optimization: For borderline physics cases, run Geometry and Context
-            # in parallel to save 20-30ms latency
-            
-            combined_blur_score = physics_result.get("combined_blur_score", 0.0)
-            is_borderline = combined_blur_score > self.BLUR_BORDERLINE_THRESHOLD
-            
-            if is_borderline:
-                # Borderline physics - run Geometry + Context in parallel
-                logger.info(f"[Guardrail] Borderline physics (blur={combined_blur_score:.2f}) - running parallel checks")
-                
-                level_start = time.time()
-                validation_trace["levels_executed"].extend(["geometry", "context", "context_advanced"])
-                validation_trace["parallel_execution"] = True
-                
-                # Run all checks in parallel
-                geometry_result, context_result, context_advanced_result = await asyncio.gather(
-                    self.image_service.check_geometry(
-                        request.image_bytes, 
-                        expected_count=expected_dish_count,
-                        prompt=request.prompt
-                    ),
-                    self.image_service.check_food_nsfw_clip(request.image_bytes, True),  # Assume food for now
-                    self.image_service.check_context_advanced(request.image_bytes)
-                )
-                
-                # Re-run context with correct YOLO detection flag if needed
-                yolo_detected_food = geometry_result.get("food_object_count", 0) > 0 or geometry_result.get("liquid_dish_count", 0) > 0
-                
-            else:
-                # Clear physics pass - run sequentially (save GPU cycles on clear passes)
-                validation_trace["parallel_execution"] = False
-                
-                # ====================================================================
-                # Level 3: Geometry (YOLOv11) - Prompt-aware
-                # ====================================================================
-                level_start = time.time()
-                validation_trace["levels_executed"].append("geometry")
-                
-                geometry_result = await self.image_service.check_geometry(
-                    request.image_bytes, 
-                    expected_count=expected_dish_count,
-                    prompt=request.prompt
-                )
-                
-                # Check if YOLO detected any food (for ensemble with CLIP)
-                yolo_detected_food = geometry_result.get("food_object_count", 0) > 0 or geometry_result.get("liquid_dish_count", 0) > 0
-            
-            # Process Geometry results
-            all_scores["food_object_count"] = geometry_result.get("food_object_count", 0)
-            all_scores["distinct_dish_count"] = geometry_result.get("distinct_dish_count", 0)
-            all_scores["liquid_dish_count"] = geometry_result.get("liquid_dish_count", 0)
-            
-            validation_trace["timings"]["geometry_ms"] = geometry_result.get("geometry_time_ms", 0.0)
-            validation_trace["detected_foods"] = geometry_result.get("detected_foods", [])
-            validation_trace["intermediate_results"]["geometry"] = geometry_result.get("intermediate_results", {})
-            
-            if geometry_result.get("geometry_skipped"):
-                validation_trace["levels_skipped"].append("geometry")
-                logger.warning("[Guardrail] Level: Geometry | Status: SKIPPED due to error")
-            elif not geometry_result.get("geometry_passed", True):
-                validation_trace["levels_failed"].append("geometry")
-                reasons.append(f"Geometry: Multiple distinct dishes detected (found={geometry_result['distinct_dish_count']}, expected={expected_dish_count})")
-                
-                # FAIL FAST (only if not already parallel executed)
-                if not is_borderline:
-                    logger.info(f"[Guardrail] FAIL FAST at Geometry level - skipping Context checks")
-                    validation_trace["levels_skipped"].extend(["context", "context_advanced"])
-                    
-                    return await self._build_response(
-                        status=GuardrailStatus.BLOCK,
-                        reasons=reasons,
-                        scores=all_scores,
-                        start_time=start_time,
-                        validation_trace=validation_trace,
-                        request=request,
-                        input_hash=input_hash
-                    )
-            else:
-                validation_trace["levels_passed"].append("geometry")
-            
-            # ====================================================================
-            # Level 4: Context (CLIP) - Ensemble with YOLO
-            # ====================================================================
-            if not is_borderline:
-                # Only run context if not already executed in parallel
-                level_start = time.time()
-                validation_trace["levels_executed"].extend(["context", "context_advanced"])
-                
-                # Run both CLIP checks in parallel
-                context_result, context_advanced_result = await asyncio.gather(
-                    self.image_service.check_food_nsfw_clip(request.image_bytes, yolo_detected_food),
-                    self.image_service.check_context_advanced(request.image_bytes)
-                )
-            
-            # Extract scores
-            all_scores["food_score"] = context_result.get("food_score", 0.0)
-            all_scores["ready_to_eat_score"] = context_result.get("ready_to_eat_score", 0.0)
-            all_scores["nsfw_score"] = context_result.get("nsfw_score", 0.0)
-            all_scores["angle_quality_score"] = context_advanced_result.get("angle_quality_score", 0.0)
-            all_scores["foreign_object_probability"] = context_advanced_result.get("foreign_object_probability", 0.0)
-            all_scores["quality_score"] = context_advanced_result.get("quality_score", 0.0)
-            
-            validation_trace["timings"]["context_ms"] = context_result.get("context_time_ms", 0.0)
-            validation_trace["timings"]["context_advanced_ms"] = context_advanced_result.get("context_advanced_time_ms", 0.0)
-            validation_trace["levels_executed"].append("context_advanced")
-            validation_trace["intermediate_results"]["context"] = context_result.get("intermediate_results", {})
-            validation_trace["intermediate_results"]["context_advanced"] = context_advanced_result.get("intermediate_results", {})
-            
-            # Check for context failures
-            context_passed = True
-            
-            if context_result.get("context_skipped"):
-                validation_trace["levels_skipped"].append("context")
-            else:
-                if context_result.get("is_nsfw"):
-                    reasons.append("Context: NSFW content detected in image")
-                    context_passed = False
-                
-                if context_result.get("is_pet_food"):
-                    reasons.append("Context: Appears to be pet food, not human food")
-                    context_passed = False
-                
-                if context_result.get("is_spoiled_food"):
-                    reasons.append("Context: Food appears spoiled or moldy")
-                    context_passed = False
-                
-                if not context_result.get("is_food") and not context_result.get("error"):
-                    # Only fail if YOLO also didn't find food (ensemble)
-                    if not yolo_detected_food:
-                        reasons.append(f"Context: Image is not food-related (top_category={context_result.get('top_category', 'unknown')})")
-                        context_passed = False
-            
-            if context_advanced_result.get("context_advanced_skipped"):
-                validation_trace["levels_skipped"].append("context_advanced")
-            else:
-                if context_advanced_result.get("has_foreign_objects"):
-                    reasons.append(f"Context: Foreign objects detected (prob={context_advanced_result['foreign_object_probability']:.2f})")
-                    context_passed = False
-                if context_advanced_result.get("has_poor_angle"):
-                    reasons.append(f"Context: Poor image angle (side_view_prob={context_advanced_result['side_view_probability']:.2f})")
-                    context_passed = False
-            
-            if context_passed:
-                validation_trace["levels_passed"].extend(["context", "context_advanced"])
-            else:
-                validation_trace["levels_failed"].extend(["context", "context_advanced"])
+
+        # Standard Geometry Check (Multiple Items)
+        if not l3_result.get("geometry_passed", True):
+            reasons.append("L3 Geometry: Multiple food items detected")
+            validation_trace["levels_failed"].append("L3_GEOMETRY")
+        else:
+            validation_trace["levels_passed"].append("L3_GEOMETRY")
+
+        # High-Confidence Pass
+        food_detections = [d for d in yolo_detections if d["class_name"] == "food" and d["confidence"] >= 0.95]
+        if food_detections and not reasons:
+            logger.info("[Guardrail] L3 Early Exit: High-confidence food detected. Skipping L4.")
+            validation_trace["levels_passed"].append("L3_GEOMETRY")
+            validation_trace["levels_skipped"].append("L4_CONTEXT")
+            validation_trace["exit_level"] = "L3_EARLY_EXIT_PASS"
+            return await self._build_response(
+                status=GuardrailStatus.PASS,
+                reasons=[],
+                scores=all_scores,
+                start_time=start_time,
+                validation_trace=validation_trace,
+                request=request,
+                input_hash=input_hash
+            )
+
+        # ========================================================================
+        # Level 4: Nuanced Inspection (MobileCLIP2) - Conditional
+        # ========================================================================
+        # Unsure Criteria: food confidence 0.40 - 0.75 or unknown objects
+        max_food_conf = max([d["confidence"] for d in yolo_detections if d["class_name"] == "food"], default=0.0)
+        has_unknown = any(d["class_name"] == "unknown" for d in yolo_detections)
         
-        # ========================================================================
+        is_unsure = (0.40 <= max_food_conf <= 0.75) or has_unknown or not food_detections
+        
+        if is_unsure:
+            level_start = time.time()
+            validation_trace["levels_executed"].append("L4_CONTEXT")
+            
+            # Dynamic Sensitivity Adjustment
+            clip_sensitivity_override = None
+            is_ethnic = "ethnic" in l3_result.get("detected_patterns", []) or "ethnic" in request.prompt.lower()
+            if is_ethnic:
+                clip_sensitivity_override = 0.05 # Much lower threshold for ethnic food
+                logger.info("[Guardrail] Ethnic food detected - lowering CLIP sensitivity")
+
+            context_result = await self.image_service.check_food_nsfw_clip(
+                request.image_bytes, 
+                yolo_food_detected=(max_food_conf > 0.25),
+                sensitivity_override=clip_sensitivity_override
+            )
+            
+            all_scores.update(context_result.get("scores", {}))
+            validation_trace["timings"]["L4_CONTEXT_ms"] = context_result.get("context_time_ms", 0.0)
+            
+            if not context_result.get("is_food"):
+                reasons.append(f"L4 Context: Image not recognized as food ({context_result.get('top_category')})")
+                validation_trace["levels_failed"].append("L4_CONTEXT")
+            elif context_result.get("is_nsfw"):
+                reasons.append("L4 Context: NSFW content detected")
+                validation_trace["levels_failed"].append("L4_CONTEXT")
+            elif context_result.get("is_spoiled_food"):
+                reasons.append("L4 Context: Spoilage nuance detected")
+                validation_trace["levels_failed"].append("L4_CONTEXT")
+            else:
+                validation_trace["levels_passed"].append("L4_CONTEXT")
+        else:
+            validation_trace["levels_skipped"].append("L4_CONTEXT")
+            logger.info("[Guardrail] Skipping L4 - YOLO results are conclusive")
+
         # Final Decision
-        # ========================================================================
         status = GuardrailStatus.BLOCK if reasons else GuardrailStatus.PASS
         
         return await self._build_response(
@@ -2120,6 +2095,39 @@ class GuardrailService:
             request=request,
             input_hash=input_hash
         )
+
+    async def _run_l1_text_validation(self, prompt: str) -> Dict[str, Any]:
+        """Helper to run L1 text validation checks."""
+        level_start = time.time()
+        reasons = []
+        scores = {}
+        
+        injection = await self.text_service.check_injection(prompt)
+        scores.update({
+            "injection_score": injection["injection_score"],
+            "semantic_similarity": injection.get("semantic_similarity", 0.0)
+        })
+        if injection["injection_score"] >= 0.5:
+            reasons.append(f"Prompt injection detected")
+        
+        policy = await self.text_service.check_policy(prompt)
+        scores.update({"policy_score": policy["policy_score"]})
+        if policy["policy_score"] >= 0.5:
+            reasons.append(f"Policy violation: {policy.get('violations', [])}")
+        
+        food_text = await self.text_service.check_food_domain(prompt)
+        scores.update({"food_domain_score": food_text["food_domain_score"]})
+        if not food_text["is_food_related"]:
+            reasons.append("Prompt is not food-related")
+            
+        expected_dish_count = self.text_service.extract_expected_dish_count(prompt)
+        
+        return {
+            "reasons": reasons,
+            "scores": scores,
+            "expected_dish_count": expected_dish_count,
+            "latency_ms": (time.time() - level_start) * 1000
+        }
     
     async def validate_batch(self, requests: List[GuardrailRequestDTO], max_concurrent: int = 5) -> List[GuardrailResponseDTO]:
         """Process multiple validation requests in parallel.
@@ -2151,22 +2159,18 @@ class GuardrailService:
         request: GuardrailRequestDTO,
         input_hash: str
     ) -> GuardrailResponseDTO:
-        """Build the final response, save logs, cache results, and record metrics."""
-        processing_time = int((time.time() - start_time) * 1000)
-        processing_time_seconds = processing_time / 1000.0
-        validation_trace["timings"]["total_ms"] = processing_time
+        """Helper to build consistent GuardrailResponseDTO and log results."""
+        processing_time_seconds = time.time() - start_time
+        processing_time = int(processing_time_seconds * 1000)
         
-        # Convert numpy types and filter to only include numeric values
-        converted_scores = convert_numpy_types(scores)
-        numeric_scores = {k: v for k, v in converted_scores.items() if isinstance(v, (float, int))}
+        # Ensure all scores are numeric for the response
+        numeric_scores = {k: float(v) if isinstance(v, (int, float, np.float32, np.float64)) else v 
+                         for k, v in scores.items()}
         
-        # Also convert validation_trace to ensure no numpy types
-        validation_trace = convert_numpy_types(validation_trace)
-        
-        # Get model variant info for metrics
+        # Get model variant info
         clip_variant = getattr(self.ml_repo, 'clip_variant', None)
-        yolo_variant = getattr(self.ml_repo, 'yolo_variant', None)
         clip_variant_str = clip_variant.value if clip_variant else "unknown"
+        yolo_variant = getattr(self.ml_repo, 'yolo_variant', None)
         yolo_variant_str = yolo_variant.value if yolo_variant else "unknown"
         
         res_data = {
@@ -2177,6 +2181,7 @@ class GuardrailService:
                 "processing_time_ms": processing_time,
                 "cache_hit": False,
                 "validation_trace": validation_trace,
+                "exit_level": validation_trace.get("exit_level"),
                 "model_variants": {
                     "clip": clip_variant_str,
                     "yolo": yolo_variant_str
@@ -2186,7 +2191,7 @@ class GuardrailService:
         
         logger.info(
             f"[Guardrail] Validation Complete | Status: {status.value} | "
-            f"Models: clip={clip_variant_str}, yolo={yolo_variant_str} | "
+            f"Exit Level: {validation_trace.get('exit_level') or 'FULL_PIPELINE'} | "
             f"Reasons: {len(reasons)} | Total Time: {processing_time}ms | "
             f"Levels: executed={validation_trace['levels_executed']}, "
             f"passed={validation_trace['levels_passed']}, "
@@ -2194,7 +2199,7 @@ class GuardrailService:
             f"skipped={validation_trace['levels_skipped']}"
         )
         
-        # Record Prometheus metrics (Phase 4)
+        # Record Prometheus metrics
         if METRICS_AVAILABLE:
             try:
                 # Record total latency
@@ -2202,16 +2207,21 @@ class GuardrailService:
                 
                 # Record per-layer latencies
                 timings = validation_trace.get("timings", {})
-                for layer in ["physics", "geometry", "context", "context_advanced"]:
-                    layer_ms = timings.get(f"{layer}_ms", 0)
+                for layer_key, layer_name in [
+                    ("L1_TEXT_ms", "text"),
+                    ("L2_PHYSICS_ms", "physics"),
+                    ("L3_GEOMETRY_ms", "geometry"),
+                    ("L4_CONTEXT_ms", "context")
+                ]:
+                    layer_ms = timings.get(layer_key, 0)
                     if layer_ms > 0:
                         record_guardrail_layer_latency(
-                            layer=layer,
+                            layer=layer_name,
                             latency_seconds=layer_ms / 1000.0,
-                            model_variant=clip_variant_str if layer in ["context", "context_advanced"] else yolo_variant_str
+                            model_variant=clip_variant_str if layer_name == "context" else yolo_variant_str
                         )
                 
-                # Record model decision for A/B testing
+                # Record model decision
                 block_reason = reasons[0].split(":")[0] if reasons else "pass"
                 record_guardrail_model_decision(
                     status=status.value,
@@ -2228,20 +2238,22 @@ class GuardrailService:
                 if "combined_blur_score" in numeric_scores:
                     record_guardrail_confidence("blur", numeric_scores["combined_blur_score"], "opencv")
                 
-                # Record parallel execution mode
-                is_parallel = validation_trace.get("parallel_execution", False)
-                record_guardrail_parallel_execution(is_parallel)
-                
             except Exception as e:
                 logger.warning(f"[Guardrail] Failed to record metrics: {e}")
         
         # Save log and cache result
+        # Note: We use the ValidationLog from modules.validation.models if possible
+        # but here we use the one from engines.guardrail.models for backward compatibility
         await self.log_repo.save(GuardrailLog(
             prompt=request.prompt,
             status=status.value,
             reasons=", ".join(reasons) if reasons else None,
-            processing_time_ms=processing_time
+            processing_time_ms=processing_time,
+            levels_executed=",".join(validation_trace["levels_executed"]),
+            levels_failed=",".join(validation_trace["levels_failed"]),
+            exit_level=validation_trace.get("exit_level")
         ))
+        
         await self.cache_repo.set(input_hash, res_data)
         
         return GuardrailResponseDTO(**res_data)

@@ -450,7 +450,7 @@ class MLRepository:
                 # Wait for all to complete with timeout
                 done, not_done = concurrent.futures.wait(
                     futures.values(),
-                    timeout=300,  # 5 minute timeout
+                    timeout=900,  # 15 minute timeout
                     return_when=concurrent.futures.ALL_COMPLETED
                 )
                 
@@ -514,7 +514,7 @@ class MLRepository:
         return cls._loading_task
     
     @classmethod
-    async def wait_for_models(cls, timeout: float = 180.0) -> bool:
+    async def wait_for_models(cls, timeout: float = 600.0) -> bool:
         """Wait for models to finish loading.
         
         Call this before handling requests that need ML models.

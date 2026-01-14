@@ -1,11 +1,16 @@
 # =============================================================================
-# Imagery Guardrail & Hybrid Pipeline - Dependencies (Standard Packages Only)
+# Guardrail Microservice - Dependencies
 # =============================================================================
-# 
-# Uses only standard pip packages (no GitHub dependencies):
+#
+# Optimized for validation-only workloads.
+# Models:
 # - Text: all-MiniLM-L6-v2 (sentence-transformers)
-# - CLIP: ViT-B-32 with LAION weights (open-clip-torch) 
-# - YOLO: YOLOv11n - 30% faster than v8, +2.2 mAP (ultralytics>=8.3.0)
+# - CLIP: MobileCLIP2-S2 with LAION weights (open-clip-torch)
+# - YOLO: YOLOv11n for food detection (ultralytics>=8.3.0)
+#
+# REMOVED (no longer needed for validation):
+# - rembg (background removal)
+# - basicsr / realesrgan (upscaling)
 # =============================================================================
 
 # FastAPI & Server
@@ -27,7 +32,7 @@ celery[redis]>=5.3.0
 kombu>=5.3.0
 flower>=2.0.0
 
-# ML Models (standard pip packages only)
+# ML Models (validation only)
 sentence-transformers==3.0.1
 open-clip-torch==2.24.0
 # torch installed separately in Dockerfile (CPU for dev, GPU for prod)
@@ -37,7 +42,7 @@ numpy>=1.24.0
 # Model Optimization (4-7x faster loading)
 safetensors>=0.4.0
 
-# Computer Vision & Object Detection
+# Computer Vision & Object Detection (validation checks)
 opencv-python-headless>=4.8.0
 # YOLOv11 included in ultralytics>=8.3.0
 ultralytics>=8.3.0

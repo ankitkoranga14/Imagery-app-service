@@ -15,6 +15,7 @@ from sqlmodel import SQLModel
 from src.core.config import settings
 from src.modules.users.models import User
 from src.engines.guardrail.models import GuardrailLog, GuardrailFeedback, GuardrailConfigVariant
+from src.modules.validation.models import ValidationLog, ValidationJob
 from src.modules.imagery.models import ImageJob
 
 DATABASE_URL = settings.DATABASE_URL

@@ -20,6 +20,7 @@ class GuardrailLog(SQLModel, table=True):
     input_hash: Optional[str] = Field(default=None, index=True)
     levels_executed: Optional[str] = Field(default=None)  # Comma-separated
     levels_failed: Optional[str] = Field(default=None)  # Comma-separated
+    exit_level: Optional[str] = Field(default=None)
     
     # Intermediate scores for analysis
     darkness_score: Optional[float] = Field(default=None)
