@@ -10,8 +10,7 @@
 #
 # Models (standard pip packages only):
 # - Text: all-MiniLM-L6-v2 (sentence-transformers)
-# - CLIP: ViT-B-32 with LAION weights (open-clip-torch)
-# - YOLO: YOLOv11n - 30% faster than v8 (ultralytics>=8.3.0)
+# - Vision: YOLOE-26n-seg - Unified L3+L4 (replaces YOLOv11n + MobileCLIP2)
 #
 # Build args:
 #   PREDOWNLOAD_MODELS: true/false (default: true)
@@ -37,6 +36,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
+    git \
     libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/* \

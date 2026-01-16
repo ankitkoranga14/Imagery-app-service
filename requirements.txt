@@ -34,7 +34,9 @@ flower>=2.0.0
 
 # ML Models (validation only)
 sentence-transformers==3.0.1
-open-clip-torch==2.24.0
+# YOLOE-26 Internal Text Encoding (Required for Open-Vocabulary)
+clip @ git+https://github.com/openai/CLIP.git
+ftfy
 # torch installed separately in Dockerfile (CPU for dev, GPU for prod)
 pillow==10.4.0
 numpy>=1.24.0

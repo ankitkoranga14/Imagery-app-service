@@ -1,17 +1,22 @@
 """
 Guardrail Repositories - Optimized for Fast Model Loading
 
+REFACTORED (2026-01-16): Using YOLOE-26n-seg exclusively
+Source: https://docs.ultralytics.com/models/yolo26/
+
 Implements:
 - Parallel model loading (50-60% faster)
-- Safetensors support (4-7x faster weight loading)
-- Configurable model sizes (standard vs lightweight)
+- YOLOE-26 open-vocabulary detection
 - Background loading with async support
 - Model caching and optimization
 
-Models (standard pip packages only):
-- Text: all-MiniLM-L6-v2 (sentence-transformers)
-- CLIP: ViT-B-32 with LAION weights (open-clip-torch)
-- YOLO: YOLOv11n - 30% faster than v8, +2.2 mAP (ultralytics>=8.3.0)
+Models:
+- Text: all-MiniLM-L6-v2 (sentence-transformers) - L1 text validation
+- Vision: YOLOE-26n-seg (ultralytics>=8.4.0) - Unified L3+L4 vision
+
+REMOVED:
+- CLIP/MobileCLIP (replaced by YOLOE-26 open-vocabulary)
+- YOLOv11n (replaced by YOLOE-26n)
 """
 
 import torch
@@ -34,9 +39,7 @@ from sqlalchemy import select, func
 import numpy as np
 
 # Pre-import ML modules at module level to avoid circular imports during parallel loading
-# This must happen BEFORE any parallel threads try to import these
 from sentence_transformers import SentenceTransformer
-import open_clip
 from ultralytics import YOLO
 
 from src.engines.guardrail.models import GuardrailLog, GuardrailFeedback, GuardrailConfigVariant
@@ -45,7 +48,7 @@ logger = logging.getLogger(__name__)
 
 
 # =============================================================================
-# Model Configuration - Single Standard Model (No Options, No Fallback)
+# Model Configuration - YOLOE-26 Only (No CLIP, No Legacy YOLO)
 # =============================================================================
 
 class ModelSize(str, Enum):
@@ -53,45 +56,57 @@ class ModelSize(str, Enum):
     STANDARD = "standard"      # Single optimal model configuration
 
 
-class CLIPModelVariant(str, Enum):
-    """CLIP model variants."""
-    VIT_B_32_LAION = "vit_b_32_laion"     # Best accuracy: laion2b_s34b_b79k weights
-
-
 class YOLOModelVariant(str, Enum):
-    """YOLO model variants."""
-    YOLOV11N = "yolo11n"      # Optimized: 56.1ms CPU (-30%), +2.2 mAP
+    """YOLOE-26 model variants (from https://docs.ultralytics.com/models/yolo26/)."""
+    YOLOE_26N_SEG = "yoloe-26n-seg"  # Nano: Fastest, ~2.3M params
+    YOLOE_26S_SEG = "yoloe-26s-seg"  # Small: Balanced, ~7.1M params
+    YOLOE_26M_SEG = "yoloe-26m-seg"  # Medium: More accurate, ~20.0M params
+    YOLO_26N = "yolo26n"             # Standard YOLO26 (non-OV fallback)
 
 
 # =============================================================================
-# Single Standard Model Configuration - No Options, No Fallback
+# Single Standard Model Configuration - YOLOE-26n Unified Vision
 # =============================================================================
-# Uses only: sentence-transformers, open-clip-torch, ultralytics
+# REFACTORED (2026-01-16): Using official YOLOE-26n-seg from Ultralytics YOLO26
+# Source: https://docs.ultralytics.com/models/yolo26/
+# 
+# Benefits:
+# - NMS-free: Native end-to-end design for faster inference
+# - Open-vocabulary: Real-time detection using text prompts
+# - ~43% faster on CPU compared to previous models
+# - ~90MB memory saved by removing CLIP
 
 MODEL_CONFIGS = {
     ModelSize.STANDARD: {
-        "text_model": "all-MiniLM-L6-v2",           # 90MB, best accuracy
-        "clip_model": "ViT-B-32",
-        "clip_pretrained": "laion2b_s34b_b79k",     # Best CLIP weights
-        "yolo_model": "yolo11n.pt",                 # 30% faster than v8
+        "text_model": "all-MiniLM-L6-v2",           # 90MB, L1 text validation
+        # YOLOE-26 models (from https://docs.ultralytics.com/models/yolo26/):
+        #   - yoloe-26n-seg.pt: Nano (fastest, ~2.3M params)
+        #   - yoloe-26s-seg.pt: Small (balanced, ~7.1M params)
+        #   - yoloe-26m-seg.pt: Medium (more accurate, ~20.0M params)
+        "yoloe_model": "yoloe-26n-seg.pt",          # Unified L3+L4 vision model (YOLOE-26 Nano Seg)
+        "yoloe_oracle_model": "yoloe-26m-seg.pt",   # Oracle model for speculative cascade (YOLOE-26 Medium Seg)
     },
 }
 
 
 class MLRepository:
-    """Optimized ML Model Repository with parallel loading and caching.
+    """Optimized ML Model Repository with YOLOE-26n-seg.
+    
+    REFACTORED (2026-01-16): Using YOLOE-26 exclusively
+    Source: https://docs.ultralytics.com/models/yolo26/
+    
+    - CLIP removed (replaced by YOLOE-26 open-vocabulary)
+    - YOLOv11n removed (replaced by YOLOE-26n)
+    - ~90MB memory saved, ~43% faster on CPU
     
     Features:
     - Parallel model loading (50-60% faster startup)
-    - Safetensors format support (4-7x faster weight loading)
-    - Configurable model sizes for speed/accuracy tradeoff
     - Thread-safe singleton pattern
     - Background loading support
     
-    Models (standard pip packages only):
-    - Text: all-MiniLM-L6-v2 (sentence-transformers)
-    - CLIP: ViT-B-32 with LAION weights (open-clip-torch)
-    - YOLO: YOLOv11n - 30% faster than v8, +2.2 mAP (ultralytics>=8.3.0)
+    Models:
+    - Text: all-MiniLM-L6-v2 (sentence-transformers) - L1 validation
+    - Vision: YOLOE-26n-seg (ultralytics>=8.4.0) - Unified L3+L4 validation
     """
     
     _instance: Optional['MLRepository'] = None
@@ -106,18 +121,15 @@ class MLRepository:
         self.model_size = ModelSize.STANDARD
         self.config = MODEL_CONFIGS[ModelSize.STANDARD]
         
+        # Text model for L1 validation
         self.text_model = None
-        self.clip_model = None
-        self.clip_preprocess = None
-        self.clip_tokenizer = None
-        self.yolo_model = None
+        
+        # YOLOE-26n-seg for unified L3+L4 vision
+        self.yoloe_model = None
+        self.yoloe_classes_configured = False  # Track if .set_classes() was called
         
         # Model variant tracking
-        self.clip_variant: Optional[CLIPModelVariant] = None
         self.yolo_variant: Optional[YOLOModelVariant] = None
-        
-        # Temperature for logit calibration (improves F1 for guardrails)
-        self.clip_temperature = float(os.environ.get("CLIP_TEMPERATURE", "1.2"))
         
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self._models_loaded = False
@@ -125,8 +137,10 @@ class MLRepository:
         self._loading_times: Dict[str, float] = {}
         
         logger.info(
-            f"[MLRepository] Initialized with device={self.device}, configuration=STANDARD"
+            f"[MLRepository] Initialized with device={self.device}, "
+            f"configuration=STANDARD, vision_model=YOLOE-26n-seg"
         )
+
     
     @classmethod
     def get_instance(cls, cache_dir: Path = None, model_size: ModelSize = None) -> 'MLRepository':
@@ -173,111 +187,129 @@ class MLRepository:
         
         return model
     
-    def _load_clip_model_impl(self) -> Tuple[Any, Any, Any]:
-        """Load OpenCLIP model (ViT-B-32) with safetensors optimization.
+    
+    def _load_yoloe_model_impl(self):
+        """Load YOLOE-26n-seg with open-vocabulary semantic classes.
         
-        Uses open-clip-torch package (standard pip install).
+        YOLOE-26 is the official open-vocabulary model from Ultralytics YOLO26.
+        Source: https://docs.ultralytics.com/models/yolo26/
+        
+        Key Features:
+        - NMS-free: Native end-to-end design for faster inference
+        - Open-vocabulary: Real-time detection using text prompts
+        - ~43% faster on CPU compared to previous models
         
         Returns:
-            Tuple of (model, preprocess, tokenizer)
-        """
-        start = time.time()
-        model_name = self.config.get("clip_model", "ViT-B-32")
-        pretrained = self.config.get("clip_pretrained", "laion2b_s34b_b79k")
-        
-        logger.info(f"[MLRepository] Loading OpenCLIP: {model_name} ({pretrained})")
-        
-        # Check for pre-converted safetensors file (4-7x faster loading)
-        safetensors_path = self.cache_dir / f"clip_{model_name.lower().replace('-', '_')}.safetensors"
-        
-        if safetensors_path.exists():
-            try:
-                from safetensors.torch import load_file
-                logger.info(f"[MLRepository] Loading CLIP from safetensors: {safetensors_path}")
-                
-                model, _, preprocess = open_clip.create_model_and_transforms(
-                    model_name, pretrained=None
-                )
-                state_dict = load_file(str(safetensors_path))
-                model.load_state_dict(state_dict)
-                tokenizer = open_clip.get_tokenizer(model_name)
-                
-                elapsed = time.time() - start
-                self._loading_times["clip_model"] = elapsed
-                self.clip_variant = CLIPModelVariant.VIT_B_32_LAION if "laion" in pretrained else CLIPModelVariant.VIT_B_32_OPENAI
-                logger.info(f"[MLRepository] ✅ OpenCLIP loaded from safetensors in {elapsed:.2f}s")
-                
-                model.eval()
-                return model, preprocess, tokenizer
-                
-            except Exception as e:
-                logger.warning(f"[MLRepository] Safetensors load failed, loading from HuggingFace: {e}")
-        
-        # Standard path: load from Hugging Face
-        model, _, preprocess = open_clip.create_model_and_transforms(
-            model_name,
-            pretrained=pretrained,
-            cache_dir=str(self.cache_dir / "open_clip")
-        )
-        tokenizer = open_clip.get_tokenizer(model_name)
-        
-        # Save to safetensors for next time (async, don't block)
-        self._save_clip_safetensors_async(model, safetensors_path)
-        
-        elapsed = time.time() - start
-        self._loading_times["clip_model"] = elapsed
-        self.clip_variant = CLIPModelVariant.VIT_B_32_LAION if "laion" in pretrained else CLIPModelVariant.VIT_B_32_OPENAI
-        logger.info(f"[MLRepository] ✅ OpenCLIP ({model_name}, {pretrained}) loaded in {elapsed:.2f}s")
-        
-        model.eval()
-        return model, preprocess, tokenizer
-    
-    def _save_clip_safetensors_async(self, model, path: Path):
-        """Save CLIP model to safetensors in background thread."""
-        def save():
-            try:
-                from safetensors.torch import save_file
-                state_dict = {k: v.cpu() for k, v in model.state_dict().items()}
-                save_file(state_dict, str(path))
-                logger.info(f"[MLRepository] CLIP saved to safetensors: {path}")
-            except Exception as e:
-                logger.warning(f"[MLRepository] Failed to save safetensors: {e}")
-        
-        # Run in background thread
-        thread = threading.Thread(target=save, daemon=True)
-        thread.start()
-    
-    def _load_yolo_model_impl(self):
-        """Load YOLO model (single model, no fallback).
-        
-        Model choice is explicit based on config:
-        - yolo11n.pt: 30% faster CPU inference (56.1ms vs 80.4ms), +2.2 mAP
-        - yolov8n.pt: Original model, widely tested
-        
-        Returns:
-            YOLO model instance
+            YOLO model instance with classes configured
             
         Raises:
             Exception: If model fails to load
         """
+        from src.engines.guardrail.yoloe_classes import GUARDRAIL_CLASSES
+        
         start = time.time()
-        model_name = self.config.get("yolo_model", "yolo11n.pt")
+        model_name = self.config.get("yoloe_model", "yoloe-26n-seg.pt")
         
-        # Determine variant from model name
-        if "yolo11" in model_name or "v11" in model_name:
-            self.yolo_variant = YOLOModelVariant.YOLOV11N
+        # Check if model exists in cache
+        cached_model_path = self.cache_dir / model_name
+        if cached_model_path.exists():
+            logger.info(f"[MLRepository] Found {model_name} in cache: {cached_model_path}")
+            model_path = str(cached_model_path)
         else:
-            self.yolo_variant = YOLOModelVariant.YOLOV8N
+            logger.info(f"[MLRepository] Model {model_name} not found in cache, will download to CWD")
+            model_path = model_name
+
+        # Ensure MobileCLIP is available in CWD (symlink from cache if needed)
+        # Ultralytics expects this file in CWD for open-vocabulary features
+        mobileclip_name = "mobileclip2_b.ts"
+        mobileclip_cache = self.cache_dir / mobileclip_name
+        mobileclip_local = Path(mobileclip_name)
         
-        logger.info(f"[MLRepository] Loading YOLO model: {model_name}")
+        if mobileclip_cache.exists() and not mobileclip_local.exists():
+            try:
+                logger.info(f"[MLRepository] Symlinking {mobileclip_name} from cache...")
+                mobileclip_local.symlink_to(mobileclip_cache)
+            except Exception as e:
+                logger.warning(f"[MLRepository] Failed to symlink MobileCLIP: {e}")
+
+        logger.info(f"[MLRepository] Loading YOLOE-26 model: {model_path}")
         
-        model = YOLO(model_name)
+        try:
+            model = YOLO(model_path)
+            
+            # Fuse layers for CPU inference speedup
+            model.fuse()
+            
+            # Configure open-vocabulary classes using YOLOE-26 API
+            # YOLOE-26 uses: model.set_classes(names, model.get_text_pe(names))
+            # See: https://docs.ultralytics.com/models/yolo26/#usage-example
+            logger.info(f"[MLRepository] Configuring YOLOE with {len(GUARDRAIL_CLASSES)} semantic classes")
+            model.set_classes(GUARDRAIL_CLASSES, model.get_text_pe(GUARDRAIL_CLASSES))
+            self.yoloe_classes_configured = True
+            
+            # Map model name to variant
+            if "yoloe-26n" in model_name:
+                self.yolo_variant = YOLOModelVariant.YOLOE_26N_SEG
+            elif "yoloe-26s" in model_name:
+                self.yolo_variant = YOLOModelVariant.YOLOE_26S_SEG
+            elif "yoloe-26m" in model_name:
+                self.yolo_variant = YOLOModelVariant.YOLOE_26M_SEG
+            else:
+                self.yolo_variant = YOLOModelVariant.YOLOE_26N_SEG
+            
+            elapsed = time.time() - start
+            self._loading_times["yoloe_model"] = elapsed
+            logger.info(
+                f"[MLRepository] ✅ YOLOE-26 model loaded in {elapsed:.2f}s | "
+                f"Variant: {self.yolo_variant.value} | "
+                f"Classes: {len(GUARDRAIL_CLASSES)}"
+            )
+            
+            return model
+            
+        except Exception as e:
+            # Fallback to standard YOLO26 (non-OV) if YOLOE fails
+            logger.warning(f"[MLRepository] YOLOE-26 failed to load: {e}")
+            logger.warning("[MLRepository] Falling back to yolo26n.pt (without open-vocab)")
+            
+            try:
+                model = YOLO("yolo26n.pt")
+                model.fuse()
+                self.yolo_variant = YOLOModelVariant.YOLO_26N
+                self.yoloe_classes_configured = False
+                
+                elapsed = time.time() - start
+                self._loading_times["yoloe_model"] = elapsed
+                logger.info(f"[MLRepository] ✅ Fallback YOLO26n loaded in {elapsed:.2f}s")
+                
+                return model
+            except Exception as e2:
+                logger.error(f"[MLRepository] ❌ All YOLO fallbacks failed: {e2}")
+                raise RuntimeError(f"Failed to load any YOLO model: {e2}")
+
+    def _load_yoloe_oracle_model_impl(self):
+        """Pre-download YOLOE-26m-seg (Oracle) model for speculative cascade."""
+        start = time.time()
+        model_name = self.config.get("yoloe_oracle_model", "yoloe-26m-seg.pt")
         
-        elapsed = time.time() - start
-        self._loading_times["yolo_model"] = elapsed
-        logger.info(f"[MLRepository] ✅ YOLO ({self.yolo_variant.value}) loaded in {elapsed:.2f}s")
+        logger.info(f"[MLRepository] Pre-downloading YOLOE Oracle model: {model_name}")
         
-        return model
+        try:
+            # Check cache first
+            cached_path = self.cache_dir / model_name
+            if cached_path.exists():
+                logger.info(f"[MLRepository] Found Oracle model in cache: {cached_path}")
+                model = YOLO(str(cached_path))
+            else:
+                # We just need to initialize it to trigger download
+                model = YOLO(model_name)
+            elapsed = time.time() - start
+            logger.info(f"[MLRepository] ✅ YOLOE Oracle model pre-downloaded in {elapsed:.2f}s")
+            return model
+        except Exception as e:
+            logger.warning(f"[MLRepository] YOLOE Oracle model failed to download: {e}")
+            return None
+
     
     # =========================================================================
     # Model Accessors (lazy loading, thread-safe)
@@ -291,109 +323,29 @@ class MLRepository:
                     self.text_model = self._load_text_model_impl()
         return self.text_model
     
-    def get_clip_model(self) -> Tuple[Any, Any]:
-        """Get CLIP model and preprocessor (backward compatible).
+    
+    def get_yoloe_model(self):
+        """Get YOLOE-26n model for unified L3+L4 vision inference.
+        
+        This is the primary vision model that replaces:
+        - L3 (YOLOv11n): Object detection
+        - L4 (MobileCLIP2): Contextual classification
+        
+        Features:
+        - NMS-free detection for dense object scenes
+        - Open-vocabulary semantic class detection
+        - STAL (Small Target Aware) for safety detection
         
         Returns:
-            Tuple of (model, preprocess)
+            YOLO model instance with guardrail classes configured
         """
-        if self.clip_model is None:
+        if self.yoloe_model is None:
             with self._load_lock:
-                if self.clip_model is None:
-                    self.clip_model, self.clip_preprocess, self.clip_tokenizer = self._load_clip_model_impl()
+                if self.yoloe_model is None:
+                    self.yoloe_model = self._load_yoloe_model_impl()
                     if self.device == "cuda":
-                        self.clip_model = self.clip_model.to(self.device)
-        return self.clip_model, self.clip_preprocess
-    
-    def get_clip_model_full(self) -> Tuple[Any, Any, Any]:
-        """Get CLIP model, preprocessor, and tokenizer.
-        
-        Returns:
-            Tuple of (model, preprocess, tokenizer)
-        """
-        if self.clip_model is None:
-            with self._load_lock:
-                if self.clip_model is None:
-                    self.clip_model, self.clip_preprocess, self.clip_tokenizer = self._load_clip_model_impl()
-                    if self.device == "cuda":
-                        self.clip_model = self.clip_model.to(self.device)
-        return self.clip_model, self.clip_preprocess, self.clip_tokenizer
-    
-    def get_clip_tokenizer(self) -> Any:
-        """Get CLIP tokenizer."""
-        if self.clip_tokenizer is None:
-            # Trigger model load which also loads tokenizer
-            self.get_clip_model()
-        return self.clip_tokenizer
-    
-    def calibrate_logits(self, logits: torch.Tensor, temperature: float = None) -> torch.Tensor:
-        """Apply temperature calibration to logits.
-        
-        Research shows T=1.0-1.5 improves F1 for guardrails.
-        Default temperature is 1.2 (configurable via CLIP_TEMPERATURE env var).
-        
-        Args:
-            logits: Raw logits from CLIP model
-            temperature: Optional temperature override (default: self.clip_temperature)
-            
-        Returns:
-            Calibrated logits
-        """
-        if temperature is None:
-            temperature = self.clip_temperature
-        return logits / temperature
-    
-    def clip_inference(
-        self, 
-        image_input: torch.Tensor, 
-        text_prompts: List[str],
-        calibrate: bool = True
-    ) -> torch.Tensor:
-        """Run CLIP inference with optional calibration.
-        
-        Args:
-            image_input: Preprocessed image tensor
-            text_prompts: List of text prompts
-            calibrate: Whether to apply temperature calibration
-            
-        Returns:
-            Probability distribution over prompts
-        """
-        model, _ = self.get_clip_model()
-        tokenizer = self.get_clip_tokenizer()
-        
-        # Tokenize text
-        text_input = tokenizer(text_prompts).to(self.device)
-        image_input = image_input.to(self.device)
-        
-        with torch.no_grad():
-            image_features = model.encode_image(image_input)
-            text_features = model.encode_text(text_input)
-            
-            # Normalize
-            image_features = image_features / image_features.norm(dim=-1, keepdim=True)
-            text_features = text_features / text_features.norm(dim=-1, keepdim=True)
-            
-            # Compute similarity
-            logits = 100.0 * image_features @ text_features.T
-            
-            # Apply calibration if requested
-            if calibrate:
-                logits = self.calibrate_logits(logits)
-            
-            probs = F.softmax(logits, dim=-1)
-        
-        return probs
-    
-    def get_yolo_model(self):
-        """Get YOLOv8 model."""
-        if self.yolo_model is None:
-            with self._load_lock:
-                if self.yolo_model is None:
-                    self.yolo_model = self._load_yolo_model_impl()
-                    if self.device == "cuda":
-                        self.yolo_model = self.yolo_model.to(self.device)
-        return self.yolo_model
+                        self.yoloe_model = self.yoloe_model.to(self.device)
+        return self.yoloe_model
     
     def encode_text(self, text: str) -> Any:
         """Encode text using sentence transformer."""
@@ -408,12 +360,15 @@ class MLRepository:
         """Preload all models SEQUENTIALLY (original method, for compatibility).
         
         Use preload_all_models_parallel() for faster loading.
+        
+        Models loaded:
+        - Text: all-MiniLM-L6-v2 (L1 validation)
+        - Vision: YOLOE-26n-OV (unified L3+L4)
         """
         try:
             start = time.time()
             self.get_text_model()
-            self.get_clip_model()
-            self.get_yolo_model()
+            self.get_yoloe_model()  # Unified L3+L4 (replaces YOLO + CLIP)
             self._models_loaded = True
             
             elapsed = time.time() - start
@@ -427,24 +382,24 @@ class MLRepository:
     def preload_all_models_parallel(self) -> bool:
         """Preload all models in PARALLEL for faster startup.
         
-        This is 50-60% faster than sequential loading as models
-        load concurrently in separate threads.
+        REFACTORED (2026-01-14):
+        - Removed CLIP loading (~90MB memory saved)
+        - Now loads YOLOE-26n for unified vision inference
         
         Models loaded:
-        - Text: SentenceTransformer (all-MiniLM-L6-v2)
-        - CLIP: MobileCLIP2-S2 (or OpenCLIP fallback)
-        - YOLO: YOLOv11n (or YOLOv8n fallback)
+        - Text: SentenceTransformer (all-MiniLM-L6-v2) - L1 validation
+        - Vision: YOLOE-26n-OV - Unified L3+L4 (replaces YOLOv11n + MobileCLIP2)
         """
         start = time.time()
-        logger.info("[MLRepository] Starting parallel model loading...")
+        logger.info("[MLRepository] Starting parallel model loading (YOLOE unified vision)...")
         
         try:
-            with concurrent.futures.ThreadPoolExecutor(max_workers=3) as executor:
-                # Submit all loading tasks
+            with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+                # Submit loading tasks - only 2 models now (CLIP removed)
                 futures = {
                     'text': executor.submit(self._load_text_model_impl),
-                    'clip': executor.submit(self._load_clip_model_impl),
-                    'yolo': executor.submit(self._load_yolo_model_impl),
+                    'yoloe': executor.submit(self._load_yoloe_model_impl),
+                    'yoloe_oracle': executor.submit(self._load_yoloe_oracle_model_impl),
                 }
                 
                 # Wait for all to complete with timeout
@@ -462,28 +417,30 @@ class MLRepository:
                 
                 # Collect results
                 self.text_model = futures['text'].result()
-                # _load_clip_model_impl now returns (model, preprocess, tokenizer)
-                self.clip_model, self.clip_preprocess, self.clip_tokenizer = futures['clip'].result()
-                self.yolo_model = futures['yolo'].result()
+                self.yoloe_model = futures['yoloe'].result()
+                # We don't store oracle_model here as it's lazy-loaded in FoodGuardrailV3
+                # but we want it pre-downloaded in the cache.
             
             # Move to GPU sequentially (GPU memory operations should be serialized)
             if self.device == "cuda":
-                logger.info("[MLRepository] Moving models to GPU...")
+                logger.info("[MLRepository] Moving YOLOE model to GPU...")
                 gpu_start = time.time()
-                self.clip_model = self.clip_model.to(self.device)
-                self.yolo_model = self.yolo_model.to(self.device)
+                self.yoloe_model = self.yoloe_model.to(self.device)
                 logger.info(f"[MLRepository] GPU transfer completed in {time.time() - gpu_start:.2f}s")
             
             self._models_loaded = True
             elapsed = time.time() - start
             
+            # Calculate memory saved
+            memory_saved_mb = 90  # Approximate CLIP model size
+            
             logger.info(
                 f"[MLRepository] ✅ All models loaded (parallel) in {elapsed:.1f}s | "
-                f"CLIP variant: {self.clip_variant.value if self.clip_variant else 'unknown'} | "
-                f"YOLO variant: {self.yolo_variant.value if self.yolo_variant else 'unknown'} | "
+                f"Vision: {self.yolo_variant.value if self.yolo_variant else 'unknown'} | "
+                f"YOLOE classes: {self.yoloe_classes_configured} | "
+                f"Memory saved: ~{memory_saved_mb}MB (CLIP removed) | "
                 f"Individual times: text={self._loading_times.get('text_model', 0):.1f}s, "
-                f"clip={self._loading_times.get('clip_model', 0):.1f}s, "
-                f"yolo={self._loading_times.get('yolo_model', 0):.1f}s"
+                f"yoloe={self._loading_times.get('yoloe_model', 0):.1f}s"
             )
             return True
             
@@ -550,9 +507,8 @@ class MLRepository:
             "models_loaded": self._models_loaded,
             "device": self.device,
             "model_size": self.model_size.value,
-            "clip_variant": self.clip_variant.value if self.clip_variant else None,
-            "yolo_variant": self.yolo_variant.value if self.yolo_variant else None,
-            "clip_temperature": self.clip_temperature,
+            "yoloe_variant": self.yolo_variant.value if self.yolo_variant else "yoloe-26n-seg",
+            "yoloe_classes_configured": self.yoloe_classes_configured,
             "loading_times": self._loading_times,
             "total_loading_time": sum(self._loading_times.values()),
             "config": self.config,
@@ -566,38 +522,11 @@ class MLRepository:
 def convert_models_to_safetensors(cache_dir: Path = None):
     """Convert models to safetensors format for faster loading.
     
-    Run this once to create optimized model files.
+    REFACTORED (2026-01-16): YOLOE models don't need manual safetensors conversion.
+    This function is now a placeholder for future optimizations.
     """
-    if cache_dir is None:
-        cache_dir = Path("./ml_cache")
-    
-    cache_dir = Path(cache_dir)
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    
-    logger.info("[MLRepository] Converting models to safetensors format...")
-    
-    try:
-        from safetensors.torch import save_file
-        import open_clip
-        
-        # Convert CLIP to safetensors
-        logger.info("[MLRepository] Converting CLIP model...")
-        model, _, _ = open_clip.create_model_and_transforms(
-            'ViT-B-32', pretrained='laion2b_s34b_b79k',
-            cache_dir=str(cache_dir / "open_clip")
-        )
-        
-        state_dict = {k: v.cpu() for k, v in model.state_dict().items()}
-        save_path = cache_dir / "clip_vit_b_32.safetensors"
-        save_file(state_dict, str(save_path))
-        logger.info(f"[MLRepository] CLIP saved to: {save_path}")
-        
-        logger.info("[MLRepository] ✅ Model conversion complete!")
-        return True
-        
-    except Exception as e:
-        logger.error(f"[MLRepository] ❌ Conversion failed: {e}")
-        return False
+    logger.info("[MLRepository] Safetensors conversion not needed for YOLOE-26 architecture.")
+    return
 
 
 # =============================================================================

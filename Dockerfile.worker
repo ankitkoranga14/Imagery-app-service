@@ -4,8 +4,7 @@
 #
 # Optimized for validation workloads:
 # - OpenCV for physics checks (blur, brightness, contrast)
-# - YOLOv11n for food object detection
-# - MobileCLIP2 for context validation
+# - YOLOE-26n-seg for unified food detection and context validation
 #
 # REMOVED (to reduce image size):
 # - rembg (background removal)
@@ -34,6 +33,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     curl \
+    git \
     libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/* \
@@ -59,7 +59,6 @@ kombu>=5.3.0
 
 # ML Models (validation only)
 sentence-transformers==3.0.1
-open-clip-torch==2.24.0
 pillow==10.4.0
 numpy>=1.24.0
 

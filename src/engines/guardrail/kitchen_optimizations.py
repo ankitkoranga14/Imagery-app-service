@@ -8,6 +8,11 @@ Features:
 3. Scale-invariant union-find
 4. Reflective surface filtering (HSV-based)
 5. Prep mode detection and bypass
+
+V3.0 Upgrades:
+6. IoU-based food-in-vessel containment
+7. ROI expansion with 6px buffer
+8. Density threshold for complex scenes
 """
 
 import numpy as np
@@ -27,7 +32,7 @@ KITCHEN_IOU_THRESHOLD = 0.30           # Was 0.45 → Stricter NMS for textured 
 KITCHEN_MIN_AREA_RATIO = 0.015         # 1.5% of image → Ignore crumbs/noise
 
 # Clustering Params
-KITCHEN_CLUSTER_SCALE_FACTOR = 0.4     # 40% of max diagonal (scale-invariant)
+KITCHEN_CLUSTER_SCALE_FACTOR = 0.15    # Was 0.3 -> More sensitive to separate distinct dishes
 
 # Reflection Detection (HSV)
 KITCHEN_REFLECTION_SAT_STD_MAX = 12    # Reflections have low color variance
@@ -37,20 +42,40 @@ KITCHEN_REFLECTION_VAL_MEAN_MIN = 200 # Reflections are bright
 KITCHEN_PREP_MODE_CONF_THRESHOLD = 0.6 # High confidence for knife/cutting board
 KITCHEN_PREP_MODE_MAX_CLUSTERS = 3     # Allow 3 clusters in prep mode
 
-# Vessel Classes (COCO IDs for containers)
+# =============================================================================
+# V3.0 ENHANCED THRESHOLDS
+# =============================================================================
+
+# Vessel-Based Clustering (Fixes Bowl-Tray Merging)
+V3_VESSEL_ROI_BUFFER = 6          # 6px buffer around vessel bounding box
+V3_VESSEL_FOOD_IOU_THRESHOLD = 0.25  # Food must have IoU > 0.25 with vessel
+V3_DENSITY_THRESHOLD = 0.32       # Flag for "Complex Scene" review
+
+# V3.0 Inference Settings (CPU Optimized)
+V3_INFERENCE_CONF = 0.38          # Optimized confidence threshold
+V3_INFERENCE_IMGSZ = 416          # Image size for 110ms latency
+V3_NMS_AGNOSTIC = True            # Prevent overlapping food/vessel suppression
+
+
+# Vessel Classes (COCO IDs + YOLOE Semantic Classes)
 VESSEL_CLASSES = {
+    # COCO IDs
     51: "bowl",
     45: "cup", 
-    41: "knife",
-    42: "spoon",
-    43: "fork",
     47: "plate",
-    # Add more as needed
+    # YOLOE Semantic Classes
+    "vessel_bowl_plate": "vessel",
+    "packaging_plastic": "packaging", # Treat packaging as a container
 }
 
+# Utensil/Prep Indicators (COCO IDs + YOLOE Semantic Classes)
 PREP_MODE_INDICATORS = {
+    # COCO IDs
     41: "knife",
-    81: "cutting_board",  # If available in model
+    81: "cutting_board",
+    # YOLOE Semantic Classes
+    "cutlery_knife": "knife",
+    "human_hand": "hand", # Hand presence often indicates prep/eating
 }
 
 
@@ -185,7 +210,11 @@ class KitchenSceneOptimizer:
         
         for i, det in enumerate(detections):
             class_id = det.get("class_id", -1)
-            if class_id in VESSEL_CLASSES:
+            class_name = det.get("class_name", "")
+            
+            is_vessel = (class_id in VESSEL_CLASSES) or (class_name in VESSEL_CLASSES)
+            
+            if is_vessel:
                 vessel_indices.append(i)
             else:
                 food_indices.append(i)
@@ -317,10 +346,16 @@ class KitchenSceneOptimizer:
         """
         for det in detections:
             class_id = det.get("class_id", -1)
+            class_name = det.get("class_name", "")
             confidence = det.get("confidence", 0.0)
             
-            if class_id in PREP_MODE_INDICATORS and confidence > KITCHEN_PREP_MODE_CONF_THRESHOLD:
+            indicator_name = None
+            if class_id in PREP_MODE_INDICATORS:
                 indicator_name = PREP_MODE_INDICATORS[class_id]
+            elif class_name in PREP_MODE_INDICATORS:
+                indicator_name = PREP_MODE_INDICATORS[class_name]
+            
+            if indicator_name and confidence > KITCHEN_PREP_MODE_CONF_THRESHOLD:
                 return True, f"prep_mode_{indicator_name}_detected"
         
         return False, "finished_meal"

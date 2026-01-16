@@ -1,0 +1,2021 @@
+{
+  "version": "v3.0",
+  "timestamp": "20260116_132240",
+  "config": {
+    "images_dir": "sample_images",
+    "ground_truth": "./ground_truth.json",
+    "physics_only": false
+  },
+  "metrics": {
+    "accuracy": 0.0,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "true_positives": 0,
+    "false_positives": 0,
+    "false_negatives": 0,
+    "true_negatives": 0,
+    "total": 0
+  },
+  "results": [
+    {
+      "filename": "170203151709-jambalaya.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "228243_0_gzvfic.webp",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "Chicken-Rice-Bowl_EXPS_TOHAM25_25774_P2_MD_04_24_10b.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "Native-Foods-3.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "PASS",
+      "is_correct": null
+    },
+    {
+      "filename": "Screenshot from 2025-11-20 16-00-26.png",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "a8ece3cf3bfc8eb602d94dc70e9776fd.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "b962af86cae0604f0ef7d0ce96800ba9.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "backend - public.png",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "blu.webp",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "blur-photo-vibrant-appetizing-still-260nw-2708216283.webp",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "blur.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "blur2.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "blurr.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "blurrrr.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "burger.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "carrot-rice-plate-marble-surface.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "carrot-rice-plate-marble-surface_114579-63851.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "dining-table-set-traditional-meal-various-dishes-laid-out-multiple-featuring-fresh-vegetables-eggs-407804556.webp",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "download (1).jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "download (2).jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "download (3).jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "download.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "fires.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "images (1).jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "PASS",
+      "is_correct": null
+    },
+    {
+      "filename": "images (2).jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "images (3).jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "images (4).jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "images (5).jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "PASS",
+      "is_correct": null
+    },
+    {
+      "filename": "images (6).jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "images.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "istockphoto-503337620-612x612.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "istockphoto-542180758-612x612.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "mul.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "mulll.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "mult.webp",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "multiple.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "multiple.webp",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "multitest.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "multititi.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "multititit.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "multitittiti.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "photo-cherry-transparent-plate-healthy-food-vegetarian-red-berries-fruits-berry-snack-149889393.webp",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "realistic-closeup-grilled-octopus-dish-260nw-2654580589.webp",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "salad-bowl-slices-tomato-spinach-600nw-2344224543.webp",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "samp.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "sampl.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "sample multip.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "samplee.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "sampleee.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "sampleeee.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "schema.png",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "stock-photo-a-group-shot-of-multiple-food-items-2003936942.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "symmetrical-food-arrangement-plate-goldenbrown-white-hues-round-form-single-item-rests-centered-surface-contrasts-399915095.webp",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "thali.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "unnamed.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    },
+    {
+      "filename": "user_multiple.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null
+    }
+  ],
+  "detailed_results": [
+    {
+      "filename": "170203151709-jambalaya.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l25_angle",
+      "details": "Invalid angle: deviation=39.1\u00b0 > 28\u00b0",
+      "physics": {
+        "filename": "170203151709-jambalaya.jpg",
+        "physics_passed": false,
+        "failed_gate": "l25_angle",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=156.2"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=33.5"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.56"
+          },
+          "l25_angle": {
+            "passed": false,
+            "reason": "Invalid angle: deviation=39.1\u00b0 > 28\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 102.32424736022949
+    },
+    {
+      "filename": "228243_0_gzvfic.webp",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "no_food",
+      "details": "No valid food items detected",
+      "physics": {
+        "filename": "228243_0_gzvfic.webp",
+        "physics_passed": true,
+        "failed_gate": null,
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=142.1"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=54.0"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.44"
+          },
+          "l25_angle": {
+            "passed": true,
+            "reason": "Valid angle: deviation=18.8\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 1963.1671905517578
+    },
+    {
+      "filename": "Chicken-Rice-Bowl_EXPS_TOHAM25_25774_P2_MD_04_24_10b.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l25_angle",
+      "details": "Invalid angle: deviation=38.7\u00b0 > 28\u00b0",
+      "physics": {
+        "filename": "Chicken-Rice-Bowl_EXPS_TOHAM25_25774_P2_MD_04_24_10b.jpg",
+        "physics_passed": false,
+        "failed_gate": "l25_angle",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=172.2"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=53.6"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.01"
+          },
+          "l25_angle": {
+            "passed": false,
+            "reason": "Invalid angle: deviation=38.7\u00b0 > 28\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 198.7478733062744
+    },
+    {
+      "filename": "Native-Foods-3.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "PASS",
+      "is_correct": null,
+      "reason": "food_detected",
+      "details": "Valid food scene with 1 cluster(s)",
+      "physics": {
+        "filename": "Native-Foods-3.jpg",
+        "physics_passed": true,
+        "failed_gate": null,
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=174.8"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=77.8"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.28"
+          },
+          "l25_angle": {
+            "passed": true,
+            "reason": "Valid angle: deviation=12.7\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 661.3249778747559
+    },
+    {
+      "filename": "Screenshot from 2025-11-20 16-00-26.png",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l1_glare",
+      "details": "Overexposed: blown_ratio=68.76%",
+      "physics": {
+        "filename": "Screenshot from 2025-11-20 16-00-26.png",
+        "physics_passed": false,
+        "failed_gate": "l1_glare",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=240.0"
+          },
+          "l1_glare": {
+            "passed": false,
+            "reason": "Overexposed: blown_ratio=68.76%"
+          }
+        }
+      },
+      "total_time_ms": 15.598535537719727
+    },
+    {
+      "filename": "a8ece3cf3bfc8eb602d94dc70e9776fd.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "no_food",
+      "details": "No valid food items detected",
+      "physics": {
+        "filename": "a8ece3cf3bfc8eb602d94dc70e9776fd.jpg",
+        "physics_passed": true,
+        "failed_gate": null,
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=132.4"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=47.7"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.14"
+          },
+          "l25_angle": {
+            "passed": true,
+            "reason": "Valid angle: deviation=20.6\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 133.1617832183838
+    },
+    {
+      "filename": "b962af86cae0604f0ef7d0ce96800ba9.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l25_angle",
+      "details": "Invalid angle: deviation=45.0\u00b0 > 28\u00b0",
+      "physics": {
+        "filename": "b962af86cae0604f0ef7d0ce96800ba9.jpg",
+        "physics_passed": false,
+        "failed_gate": "l25_angle",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=80.0"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=64.6"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.34"
+          },
+          "l25_angle": {
+            "passed": false,
+            "reason": "Invalid angle: deviation=45.0\u00b0 > 28\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 40.1911735534668
+    },
+    {
+      "filename": "backend - public.png",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l0_darkness",
+      "details": "Too dark: L_mean=52.9 < 62",
+      "physics": {
+        "filename": "backend - public.png",
+        "physics_passed": false,
+        "failed_gate": "l0_darkness",
+        "gates": {
+          "l0_darkness": {
+            "passed": false,
+            "reason": "Too dark: L_mean=52.9 < 62"
+          }
+        }
+      },
+      "total_time_ms": 1748.8481998443604
+    },
+    {
+      "filename": "blu.webp",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "no_food",
+      "details": "No valid food items detected",
+      "physics": {
+        "filename": "blu.webp",
+        "physics_passed": true,
+        "failed_gate": null,
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=155.7"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=61.2"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.16"
+          },
+          "l25_angle": {
+            "passed": true,
+            "reason": "Valid angle: deviation=1.7\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 110.60857772827148
+    },
+    {
+      "filename": "blur-photo-vibrant-appetizing-still-260nw-2708216283.webp",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "no_food",
+      "details": "No valid food items detected",
+      "physics": {
+        "filename": "blur-photo-vibrant-appetizing-still-260nw-2708216283.webp",
+        "physics_passed": true,
+        "failed_gate": null,
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=134.4"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=58.5"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.29"
+          },
+          "l25_angle": {
+            "passed": true,
+            "reason": "Valid angle: deviation=0.8\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 88.13738822937012
+    },
+    {
+      "filename": "blur.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l1_glare",
+      "details": "Overexposed: blown_ratio=32.35%",
+      "physics": {
+        "filename": "blur.jpeg",
+        "physics_passed": false,
+        "failed_gate": "l1_glare",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=172.9"
+          },
+          "l1_glare": {
+            "passed": false,
+            "reason": "Overexposed: blown_ratio=32.35%"
+          }
+        }
+      },
+      "total_time_ms": 2.236604690551758
+    },
+    {
+      "filename": "blur2.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l2_blur",
+      "details": "Image too blurry: score=0.71",
+      "physics": {
+        "filename": "blur2.jpeg",
+        "physics_passed": false,
+        "failed_gate": "l2_blur",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=209.8"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=43.0"
+          },
+          "l2_blur": {
+            "passed": false,
+            "reason": "Image too blurry: score=0.71"
+          }
+        }
+      },
+      "total_time_ms": 7.068157196044922
+    },
+    {
+      "filename": "blurr.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l1_glare",
+      "details": "Overexposed: blown_ratio=19.46%",
+      "physics": {
+        "filename": "blurr.jpg",
+        "physics_passed": false,
+        "failed_gate": "l1_glare",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=215.3"
+          },
+          "l1_glare": {
+            "passed": false,
+            "reason": "Overexposed: blown_ratio=19.46%"
+          }
+        }
+      },
+      "total_time_ms": 45.63450813293457
+    },
+    {
+      "filename": "blurrrr.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "no_food",
+      "details": "No valid food items detected",
+      "physics": {
+        "filename": "blurrrr.jpeg",
+        "physics_passed": true,
+        "failed_gate": null,
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=89.1"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=71.0"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.26"
+          },
+          "l25_angle": {
+            "passed": true,
+            "reason": "Valid angle: deviation=0.0\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 368.2818412780762
+    },
+    {
+      "filename": "burger.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "no_food",
+      "details": "No valid food items detected",
+      "physics": {
+        "filename": "burger.jpeg",
+        "physics_passed": true,
+        "failed_gate": null,
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=101.8"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=63.0"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.04"
+          },
+          "l25_angle": {
+            "passed": true,
+            "reason": "Valid angle: deviation=27.8\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 1250.0178813934326
+    },
+    {
+      "filename": "carrot-rice-plate-marble-surface.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l25_angle",
+      "details": "Invalid angle: deviation=45.0\u00b0 > 28\u00b0",
+      "physics": {
+        "filename": "carrot-rice-plate-marble-surface.jpg",
+        "physics_passed": false,
+        "failed_gate": "l25_angle",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=133.2"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=39.4"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.62"
+          },
+          "l25_angle": {
+            "passed": false,
+            "reason": "Invalid angle: deviation=45.0\u00b0 > 28\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 1398.7083435058594
+    },
+    {
+      "filename": "carrot-rice-plate-marble-surface_114579-63851.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l2_blur",
+      "details": "Image too blurry: score=0.65",
+      "physics": {
+        "filename": "carrot-rice-plate-marble-surface_114579-63851.jpg",
+        "physics_passed": false,
+        "failed_gate": "l2_blur",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=133.2"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=39.1"
+          },
+          "l2_blur": {
+            "passed": false,
+            "reason": "Image too blurry: score=0.65"
+          }
+        }
+      },
+      "total_time_ms": 24.045705795288086
+    },
+    {
+      "filename": "dining-table-set-traditional-meal-various-dishes-laid-out-multiple-featuring-fresh-vegetables-eggs-407804556.webp",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "no_food",
+      "details": "No valid food items detected",
+      "physics": {
+        "filename": "dining-table-set-traditional-meal-various-dishes-laid-out-multiple-featuring-fresh-vegetables-eggs-407804556.webp",
+        "physics_passed": true,
+        "failed_gate": null,
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=158.6"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=43.6"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.25"
+          },
+          "l25_angle": {
+            "passed": true,
+            "reason": "Valid angle: deviation=15.2\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 228.31368446350098
+    },
+    {
+      "filename": "download (1).jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l1_glare",
+      "details": "Overexposed: blown_ratio=16.94%",
+      "physics": {
+        "filename": "download (1).jpeg",
+        "physics_passed": false,
+        "failed_gate": "l1_glare",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=189.7"
+          },
+          "l1_glare": {
+            "passed": false,
+            "reason": "Overexposed: blown_ratio=16.94%"
+          }
+        }
+      },
+      "total_time_ms": 1.539468765258789
+    },
+    {
+      "filename": "download (2).jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l1_glare",
+      "details": "Overexposed: blown_ratio=43.01%",
+      "physics": {
+        "filename": "download (2).jpeg",
+        "physics_passed": false,
+        "failed_gate": "l1_glare",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=171.4"
+          },
+          "l1_glare": {
+            "passed": false,
+            "reason": "Overexposed: blown_ratio=43.01%"
+          }
+        }
+      },
+      "total_time_ms": 1.5664100646972656
+    },
+    {
+      "filename": "download (3).jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "no_food",
+      "details": "No valid food items detected",
+      "physics": {
+        "filename": "download (3).jpeg",
+        "physics_passed": true,
+        "failed_gate": null,
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=162.5"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=57.3"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.00"
+          },
+          "l25_angle": {
+            "passed": true,
+            "reason": "Valid angle: deviation=22.9\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 551.964521408081
+    },
+    {
+      "filename": "download.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l0_darkness",
+      "details": "Too dark: L_mean=59.5 < 62",
+      "physics": {
+        "filename": "download.jpeg",
+        "physics_passed": false,
+        "failed_gate": "l0_darkness",
+        "gates": {
+          "l0_darkness": {
+            "passed": false,
+            "reason": "Too dark: L_mean=59.5 < 62"
+          }
+        }
+      },
+      "total_time_ms": 0.9102821350097656
+    },
+    {
+      "filename": "fires.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l25_angle",
+      "details": "Invalid angle: deviation=34.2\u00b0 > 28\u00b0",
+      "physics": {
+        "filename": "fires.jpg",
+        "physics_passed": false,
+        "failed_gate": "l25_angle",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=127.9"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=34.5"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.22"
+          },
+          "l25_angle": {
+            "passed": false,
+            "reason": "Invalid angle: deviation=34.2\u00b0 > 28\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 67.70586967468262
+    },
+    {
+      "filename": "images (1).jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "PASS",
+      "is_correct": null,
+      "reason": "food_detected",
+      "details": "Valid food scene with 4 cluster(s)",
+      "physics": {
+        "filename": "images (1).jpeg",
+        "physics_passed": true,
+        "failed_gate": null,
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=72.7"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=69.8"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.06"
+          },
+          "l25_angle": {
+            "passed": true,
+            "reason": "Valid angle: deviation=0.0\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 255.76329231262207
+    },
+    {
+      "filename": "images (2).jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "no_food",
+      "details": "No valid food items detected",
+      "physics": {
+        "filename": "images (2).jpeg",
+        "physics_passed": true,
+        "failed_gate": null,
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=205.2"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=18.6"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.52"
+          },
+          "l25_angle": {
+            "passed": true,
+            "reason": "No strong lines detected (likely top-down)"
+          }
+        }
+      },
+      "total_time_ms": 632.1463584899902
+    },
+    {
+      "filename": "images (3).jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "no_food",
+      "details": "No valid food items detected",
+      "physics": {
+        "filename": "images (3).jpeg",
+        "physics_passed": true,
+        "failed_gate": null,
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=228.5"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=20.0"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.64"
+          },
+          "l25_angle": {
+            "passed": true,
+            "reason": "No strong lines detected (likely top-down)"
+          }
+        }
+      },
+      "total_time_ms": 248.7947940826416
+    },
+    {
+      "filename": "images (4).jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l1_glare",
+      "details": "Glare detected: V_std=86.2, sat_ratio=28.52%",
+      "physics": {
+        "filename": "images (4).jpeg",
+        "physics_passed": false,
+        "failed_gate": "l1_glare",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=66.0"
+          },
+          "l1_glare": {
+            "passed": false,
+            "reason": "Glare detected: V_std=86.2, sat_ratio=28.52%"
+          }
+        }
+      },
+      "total_time_ms": 2.856731414794922
+    },
+    {
+      "filename": "images (5).jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "PASS",
+      "is_correct": null,
+      "reason": "food_detected",
+      "details": "Valid food scene with 2 cluster(s)",
+      "physics": {
+        "filename": "images (5).jpeg",
+        "physics_passed": true,
+        "failed_gate": null,
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=122.0"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=49.3"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.00"
+          },
+          "l25_angle": {
+            "passed": true,
+            "reason": "Valid angle: deviation=20.1\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 382.6603889465332
+    },
+    {
+      "filename": "images (6).jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l1_glare",
+      "details": "Glare detected: V_std=87.5, sat_ratio=7.91%",
+      "physics": {
+        "filename": "images (6).jpeg",
+        "physics_passed": false,
+        "failed_gate": "l1_glare",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=143.0"
+          },
+          "l1_glare": {
+            "passed": false,
+            "reason": "Glare detected: V_std=87.5, sat_ratio=7.91%"
+          }
+        }
+      },
+      "total_time_ms": 3.9148330688476562
+    },
+    {
+      "filename": "images.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l25_angle",
+      "details": "Invalid angle: deviation=41.8\u00b0 > 28\u00b0",
+      "physics": {
+        "filename": "images.jpeg",
+        "physics_passed": false,
+        "failed_gate": "l25_angle",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=132.5"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=64.6"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.00"
+          },
+          "l25_angle": {
+            "passed": false,
+            "reason": "Invalid angle: deviation=41.8\u00b0 > 28\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 25.19702911376953
+    },
+    {
+      "filename": "istockphoto-503337620-612x612.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "foreign_object",
+      "details": "Zero-tolerance violation: knife detected (conf=0.71)",
+      "physics": {
+        "filename": "istockphoto-503337620-612x612.jpg",
+        "physics_passed": true,
+        "failed_gate": null,
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=99.3"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=82.6"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.00"
+          },
+          "l25_angle": {
+            "passed": true,
+            "reason": "Valid angle: deviation=21.3\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 427.16169357299805
+    },
+    {
+      "filename": "istockphoto-542180758-612x612.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l1_glare",
+      "details": "Overexposed: blown_ratio=15.86%",
+      "physics": {
+        "filename": "istockphoto-542180758-612x612.jpg",
+        "physics_passed": false,
+        "failed_gate": "l1_glare",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=140.4"
+          },
+          "l1_glare": {
+            "passed": false,
+            "reason": "Overexposed: blown_ratio=15.86%"
+          }
+        }
+      },
+      "total_time_ms": 16.772985458374023
+    },
+    {
+      "filename": "mul.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l25_angle",
+      "details": "Invalid angle: deviation=45.0\u00b0 > 28\u00b0",
+      "physics": {
+        "filename": "mul.jpeg",
+        "physics_passed": false,
+        "failed_gate": "l25_angle",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=152.5"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=49.9"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.00"
+          },
+          "l25_angle": {
+            "passed": false,
+            "reason": "Invalid angle: deviation=45.0\u00b0 > 28\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 25.90155601501465
+    },
+    {
+      "filename": "mulll.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l25_angle",
+      "details": "Invalid angle: deviation=41.2\u00b0 > 28\u00b0",
+      "physics": {
+        "filename": "mulll.jpeg",
+        "physics_passed": false,
+        "failed_gate": "l25_angle",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=149.1"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=63.2"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.00"
+          },
+          "l25_angle": {
+            "passed": false,
+            "reason": "Invalid angle: deviation=41.2\u00b0 > 28\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 18.1732177734375
+    },
+    {
+      "filename": "mult.webp",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l25_angle",
+      "details": "Invalid angle: deviation=45.0\u00b0 > 28\u00b0",
+      "physics": {
+        "filename": "mult.webp",
+        "physics_passed": false,
+        "failed_gate": "l25_angle",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=146.4"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=60.5"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.00"
+          },
+          "l25_angle": {
+            "passed": false,
+            "reason": "Invalid angle: deviation=45.0\u00b0 > 28\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 34.4846248626709
+    },
+    {
+      "filename": "multiple.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "no_food",
+      "details": "No valid food items detected",
+      "physics": {
+        "filename": "multiple.jpg",
+        "physics_passed": true,
+        "failed_gate": null,
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=115.3"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=76.7"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.00"
+          },
+          "l25_angle": {
+            "passed": true,
+            "reason": "Valid angle: deviation=5.2\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 118.04556846618652
+    },
+    {
+      "filename": "multiple.webp",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l25_angle",
+      "details": "Invalid angle: deviation=45.0\u00b0 > 28\u00b0",
+      "physics": {
+        "filename": "multiple.webp",
+        "physics_passed": false,
+        "failed_gate": "l25_angle",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=146.4"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=60.5"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.00"
+          },
+          "l25_angle": {
+            "passed": false,
+            "reason": "Invalid angle: deviation=45.0\u00b0 > 28\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 25.927066802978516
+    },
+    {
+      "filename": "multitest.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l25_angle",
+      "details": "Invalid angle: deviation=39.8\u00b0 > 28\u00b0",
+      "physics": {
+        "filename": "multitest.jpg",
+        "physics_passed": false,
+        "failed_gate": "l25_angle",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=128.5"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=50.6"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.09"
+          },
+          "l25_angle": {
+            "passed": false,
+            "reason": "Invalid angle: deviation=39.8\u00b0 > 28\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 26.86142921447754
+    },
+    {
+      "filename": "multititi.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l25_angle",
+      "details": "Invalid angle: deviation=45.0\u00b0 > 28\u00b0",
+      "physics": {
+        "filename": "multititi.jpeg",
+        "physics_passed": false,
+        "failed_gate": "l25_angle",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=144.4"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=62.1"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.00"
+          },
+          "l25_angle": {
+            "passed": false,
+            "reason": "Invalid angle: deviation=45.0\u00b0 > 28\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 13.837814331054688
+    },
+    {
+      "filename": "multititit.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l25_angle",
+      "details": "Invalid angle: deviation=41.9\u00b0 > 28\u00b0",
+      "physics": {
+        "filename": "multititit.jpg",
+        "physics_passed": false,
+        "failed_gate": "l25_angle",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=142.1"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=51.2"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.00"
+          },
+          "l25_angle": {
+            "passed": false,
+            "reason": "Invalid angle: deviation=41.9\u00b0 > 28\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 38.85245323181152
+    },
+    {
+      "filename": "multitittiti.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l25_angle",
+      "details": "Invalid angle: deviation=37.5\u00b0 > 28\u00b0",
+      "physics": {
+        "filename": "multitittiti.jpeg",
+        "physics_passed": false,
+        "failed_gate": "l25_angle",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=173.6"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=58.9"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.00"
+          },
+          "l25_angle": {
+            "passed": false,
+            "reason": "Invalid angle: deviation=37.5\u00b0 > 28\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 16.052961349487305
+    },
+    {
+      "filename": "photo-cherry-transparent-plate-healthy-food-vegetarian-red-berries-fruits-berry-snack-149889393.webp",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l1_glare",
+      "details": "Overexposed: blown_ratio=60.07%",
+      "physics": {
+        "filename": "photo-cherry-transparent-plate-healthy-food-vegetarian-red-berries-fruits-berry-snack-149889393.webp",
+        "physics_passed": false,
+        "failed_gate": "l1_glare",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=195.5"
+          },
+          "l1_glare": {
+            "passed": false,
+            "reason": "Overexposed: blown_ratio=60.07%"
+          }
+        }
+      },
+      "total_time_ms": 20.054101943969727
+    },
+    {
+      "filename": "realistic-closeup-grilled-octopus-dish-260nw-2654580589.webp",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l25_angle",
+      "details": "Invalid angle: deviation=45.0\u00b0 > 28\u00b0",
+      "physics": {
+        "filename": "realistic-closeup-grilled-octopus-dish-260nw-2654580589.webp",
+        "physics_passed": false,
+        "failed_gate": "l25_angle",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=145.2"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=51.0"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.00"
+          },
+          "l25_angle": {
+            "passed": false,
+            "reason": "Invalid angle: deviation=45.0\u00b0 > 28\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 21.642446517944336
+    },
+    {
+      "filename": "salad-bowl-slices-tomato-spinach-600nw-2344224543.webp",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l1_glare",
+      "details": "Overexposed: blown_ratio=30.01%",
+      "physics": {
+        "filename": "salad-bowl-slices-tomato-spinach-600nw-2344224543.webp",
+        "physics_passed": false,
+        "failed_gate": "l1_glare",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=164.9"
+          },
+          "l1_glare": {
+            "passed": false,
+            "reason": "Overexposed: blown_ratio=30.01%"
+          }
+        }
+      },
+      "total_time_ms": 13.31949234008789
+    },
+    {
+      "filename": "samp.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l25_angle",
+      "details": "Invalid angle: deviation=42.9\u00b0 > 28\u00b0",
+      "physics": {
+        "filename": "samp.jpg",
+        "physics_passed": false,
+        "failed_gate": "l25_angle",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=118.1"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=55.4"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.59"
+          },
+          "l25_angle": {
+            "passed": false,
+            "reason": "Invalid angle: deviation=42.9\u00b0 > 28\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 70.23739814758301
+    },
+    {
+      "filename": "sampl.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l25_angle",
+      "details": "Invalid angle: deviation=45.0\u00b0 > 28\u00b0",
+      "physics": {
+        "filename": "sampl.jpg",
+        "physics_passed": false,
+        "failed_gate": "l25_angle",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=133.7"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=63.8"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.08"
+          },
+          "l25_angle": {
+            "passed": false,
+            "reason": "Invalid angle: deviation=45.0\u00b0 > 28\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 18.70131492614746
+    },
+    {
+      "filename": "sample multip.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l25_angle",
+      "details": "Invalid angle: deviation=35.9\u00b0 > 28\u00b0",
+      "physics": {
+        "filename": "sample multip.jpeg",
+        "physics_passed": false,
+        "failed_gate": "l25_angle",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=147.9"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=56.6"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.00"
+          },
+          "l25_angle": {
+            "passed": false,
+            "reason": "Invalid angle: deviation=35.9\u00b0 > 28\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 15.760660171508789
+    },
+    {
+      "filename": "samplee.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "no_food",
+      "details": "No valid food items detected",
+      "physics": {
+        "filename": "samplee.jpeg",
+        "physics_passed": true,
+        "failed_gate": null,
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=126.6"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=60.8"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.00"
+          },
+          "l25_angle": {
+            "passed": true,
+            "reason": "Valid angle: deviation=8.9\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 146.32010459899902
+    },
+    {
+      "filename": "sampleee.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "no_food",
+      "details": "No valid food items detected",
+      "physics": {
+        "filename": "sampleee.jpeg",
+        "physics_passed": true,
+        "failed_gate": null,
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=154.4"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=57.4"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.00"
+          },
+          "l25_angle": {
+            "passed": true,
+            "reason": "Valid angle: deviation=16.0\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 138.2598876953125
+    },
+    {
+      "filename": "sampleeee.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "no_food",
+      "details": "No valid food items detected",
+      "physics": {
+        "filename": "sampleeee.jpeg",
+        "physics_passed": true,
+        "failed_gate": null,
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=112.2"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=68.3"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.00"
+          },
+          "l25_angle": {
+            "passed": true,
+            "reason": "Valid angle: deviation=11.8\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 676.0110855102539
+    },
+    {
+      "filename": "schema.png",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l1_glare",
+      "details": "Overexposed: blown_ratio=95.63%",
+      "physics": {
+        "filename": "schema.png",
+        "physics_passed": false,
+        "failed_gate": "l1_glare",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=248.2"
+          },
+          "l1_glare": {
+            "passed": false,
+            "reason": "Overexposed: blown_ratio=95.63%"
+          }
+        }
+      },
+      "total_time_ms": 5390.051364898682
+    },
+    {
+      "filename": "stock-photo-a-group-shot-of-multiple-food-items-2003936942.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l25_angle",
+      "details": "Invalid angle: deviation=45.0\u00b0 > 28\u00b0",
+      "physics": {
+        "filename": "stock-photo-a-group-shot-of-multiple-food-items-2003936942.jpg",
+        "physics_passed": false,
+        "failed_gate": "l25_angle",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=118.0"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=76.7"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.01"
+          },
+          "l25_angle": {
+            "passed": false,
+            "reason": "Invalid angle: deviation=45.0\u00b0 > 28\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 401.8537998199463
+    },
+    {
+      "filename": "symmetrical-food-arrangement-plate-goldenbrown-white-hues-round-form-single-item-rests-centered-surface-contrasts-399915095.webp",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l2_blur",
+      "details": "Image too blurry: score=0.67",
+      "physics": {
+        "filename": "symmetrical-food-arrangement-plate-goldenbrown-white-hues-round-form-single-item-rests-centered-surface-contrasts-399915095.webp",
+        "physics_passed": false,
+        "failed_gate": "l2_blur",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=199.2"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=43.9"
+          },
+          "l2_blur": {
+            "passed": false,
+            "reason": "Image too blurry: score=0.67"
+          }
+        }
+      },
+      "total_time_ms": 30.803442001342773
+    },
+    {
+      "filename": "thali.jpeg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l1_glare",
+      "details": "Overexposed: blown_ratio=17.25%",
+      "physics": {
+        "filename": "thali.jpeg",
+        "physics_passed": false,
+        "failed_gate": "l1_glare",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=173.7"
+          },
+          "l1_glare": {
+            "passed": false,
+            "reason": "Overexposed: blown_ratio=17.25%"
+          }
+        }
+      },
+      "total_time_ms": 2.0248889923095703
+    },
+    {
+      "filename": "unnamed.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "no_food",
+      "details": "No valid food items detected",
+      "physics": {
+        "filename": "unnamed.jpg",
+        "physics_passed": true,
+        "failed_gate": null,
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=73.5"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=84.2"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.00"
+          },
+          "l25_angle": {
+            "passed": true,
+            "reason": "Valid angle: deviation=11.3\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 242.2037124633789
+    },
+    {
+      "filename": "user_multiple.jpg",
+      "expected": "UNKNOWN",
+      "predicted": "BLOCK",
+      "is_correct": null,
+      "reason": "quality_issue_l25_angle",
+      "details": "Invalid angle: deviation=40.2\u00b0 > 28\u00b0",
+      "physics": {
+        "filename": "user_multiple.jpg",
+        "physics_passed": false,
+        "failed_gate": "l25_angle",
+        "gates": {
+          "l0_darkness": {
+            "passed": true,
+            "reason": "Acceptable brightness: L_mean=118.1"
+          },
+          "l1_glare": {
+            "passed": true,
+            "reason": "Acceptable exposure: V_std=55.3"
+          },
+          "l2_blur": {
+            "passed": true,
+            "reason": "Acceptable sharpness: score=0.59"
+          },
+          "l25_angle": {
+            "passed": false,
+            "reason": "Invalid angle: deviation=40.2\u00b0 > 28\u00b0"
+          }
+        }
+      },
+      "total_time_ms": 68.5276985168457
+    }
+  ],
+  "mismatches": []
+}

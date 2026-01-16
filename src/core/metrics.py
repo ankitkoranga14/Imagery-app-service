@@ -103,7 +103,7 @@ guardrail_layer_latency_seconds = Histogram(
 guardrail_model_decisions = Counter(
     "guardrail_model_decisions_total",
     "Decision outcomes by model variant (for A/B testing)",
-    labelnames=["status", "reason", "clip_variant", "yolo_variant"]
+    labelnames=["status", "reason", "yoloe_variant"]
 )
 
 # Confidence score distribution
@@ -310,22 +310,19 @@ def record_guardrail_layer_latency(
 def record_guardrail_model_decision(
     status: str,
     reason: str,
-    clip_variant: str = "unknown",
-    yolo_variant: str = "unknown"
+    yoloe_variant: str = "unknown"
 ):
     """Record decision outcome with model variant info for A/B testing.
     
     Args:
         status: Decision status (PASS, BLOCK)
         reason: Block reason or "pass"
-        clip_variant: CLIP model variant used
-        yolo_variant: YOLO model variant used
+        yoloe_variant: YOLOE model variant used
     """
     guardrail_model_decisions.labels(
         status=status,
         reason=reason,
-        clip_variant=clip_variant,
-        yolo_variant=yolo_variant
+        yoloe_variant=yoloe_variant
     ).inc()
 
 

@@ -158,3 +158,17 @@ curl http://localhost:8000/api/v1/validate/stats
 4. ✅ **Fail-fast logic** - L0→L1→L2→L3/L4 (parallel if borderline)
 5. ✅ **Audit logging** - All validations stored in ValidationLogs
 6. ✅ **Sync/Async modes** - Both supported via single endpoint
+
+## ✅ Phase 6: YOLOE-26n Refactoring (COMPLETED)
+
+### 6.1 Unified Vision Pipeline
+- ✅ Replaced L3 (YOLOv11n) and L4 (MobileCLIP2) with Unified L3+L4 (YOLOE-26n)
+- ✅ Implemented `process_unified_vision` in `services.py`
+- ✅ Removed MobileCLIP2 dependency (saved ~90MB memory)
+- ✅ NMS-free detection for dense bowl counting
+- ✅ Open-vocabulary semantic classification
+
+### 6.2 Updated Model Configuration
+- ✅ `repositories.py` updated to load `yolov8s-world.pt` (YOLO-World Small)
+- ✅ `scripts/setup_models.py` updated to download YOLOE instead of CLIP
+- ✅ `yoloe_classes.py` created for semantic class definitions

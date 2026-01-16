@@ -10,8 +10,7 @@ This script:
 
 Models (standard pip packages only):
 - Text: all-MiniLM-L6-v2 (sentence-transformers)
-- CLIP: ViT-B-32 with LAION weights (open-clip-torch)
-- YOLO: YOLOv11n - 30% faster than v8, +2.2 mAP (ultralytics>=8.3.0)
+- Vision: YOLOE-26n-seg (ultralytics>=8.4.0) - Unified L3+L4 vision
 
 Run this during Docker build to avoid download at runtime:
     python scripts/setup_models.py
@@ -26,6 +25,7 @@ import time
 import logging
 import argparse
 from pathlib import Path
+import numpy as np
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -41,7 +41,7 @@ logger = logging.getLogger(__name__)
 logger.info("Pre-importing ML modules...")
 import torch
 from sentence_transformers import SentenceTransformer
-import open_clip
+# import open_clip # Removed
 from ultralytics import YOLO
 logger.info("ML modules imported successfully")
 
@@ -83,6 +83,18 @@ def setup_models(
     os.environ["ML_MODEL_CACHE_DIR"] = str(cache_path)
     
     try:
+        # 1. Explicitly download MobileCLIP (Required for YOLOE Open Vocabulary)
+        # We download this directly to cache to avoid runtime downloads
+        mobileclip_url = "https://github.com/ultralytics/assets/releases/download/v8.4.0/mobileclip2_b.ts"
+        mobileclip_path = cache_path / "mobileclip2_b.ts"
+        
+        if not mobileclip_path.exists():
+            logger.info(f"Downloading MobileCLIP (required for open-vocab) to {mobileclip_path}...")
+            torch.hub.download_url_to_file(mobileclip_url, str(mobileclip_path))
+        else:
+            logger.info(f"MobileCLIP already in cache: {mobileclip_path}")
+
+        # 2. Load other models via MLRepository
         from src.engines.guardrail.repositories import MLRepository, ModelSize
         
         # Always use STANDARD - single model configuration
@@ -90,6 +102,7 @@ def setup_models(
         
         download_start = time.time()
         
+        # This will trigger YOLO downloads (likely to CWD)
         if parallel:
             success = ml_repo.preload_all_models_parallel()
         else:
@@ -103,6 +116,18 @@ def setup_models(
         
         logger.info(f"✅ Models downloaded in {download_time:.1f}s")
         
+        # 3. Move any models downloaded to CWD into cache
+        logger.info("Ensuring all models are in cache...")
+        for ext in ["*.pt", "*.ts"]:
+            for f in Path(".").glob(ext):
+                target = cache_path / f.name
+                if not target.exists():
+                    logger.info(f"Moving {f.name} to cache...")
+                    f.rename(target)
+                else:
+                    logger.info(f"{f.name} already in cache, removing local copy...")
+                    f.unlink()
+        
         # Log individual times
         stats = ml_repo.get_loading_stats()
         for model, load_time in stats.get("loading_times", {}).items():
@@ -115,38 +140,11 @@ def setup_models(
         return False
     
     # =========================================================================
-    # Step 2: Convert to Safetensors
+    # Step 2: Convert to Safetensors (Skipped for YOLOE)
     # =========================================================================
-    if convert_safetensors:
-        logger.info("\n[Step 2/4] Converting models to safetensors format...")
-        
-        try:
-            from safetensors.torch import save_file
-            import torch
-            
-            # Convert CLIP model
-            clip_safetensors_path = cache_path / "clip_vit_b_32.safetensors"
-            
-            if not clip_safetensors_path.exists():
-                logger.info("Converting CLIP to safetensors...")
-                convert_start = time.time()
-                
-                clip_model, _ = ml_repo.get_clip_model()
-                state_dict = {k: v.cpu() for k, v in clip_model.state_dict().items()}
-                save_file(state_dict, str(clip_safetensors_path))
-                
-                convert_time = time.time() - convert_start
-                file_size = clip_safetensors_path.stat().st_size / (1024 * 1024)
-                logger.info(f"✅ CLIP saved to safetensors ({file_size:.1f}MB) in {convert_time:.1f}s")
-            else:
-                logger.info(f"✅ CLIP safetensors already exists: {clip_safetensors_path}")
-            
-        except ImportError:
-            logger.warning("⚠️ safetensors not installed, skipping conversion")
-        except Exception as e:
-            logger.warning(f"⚠️ Safetensors conversion failed: {e}")
-    else:
-        logger.info("\n[Step 2/4] Skipping safetensors conversion")
+    # YOLOE models are already optimized or don't need safetensors conversion
+    # in the same way CLIP did.
+    logger.info("\n[Step 2/4] Skipping safetensors conversion (not needed for YOLOE)")
     
     # =========================================================================
     # Step 3: Validate Models
@@ -162,29 +160,29 @@ def setup_models(
             assert embedding is not None and len(embedding) > 0
             logger.info("✅ Text model validated")
             
-            # Test CLIP model
-            logger.info("Testing CLIP model...")
-            clip_model, preprocess = ml_repo.get_clip_model()
-            import torch
-            with torch.no_grad():
-                # Create dummy image
-                from PIL import Image
-                import numpy as np
-                dummy_img = Image.fromarray(np.zeros((224, 224, 3), dtype=np.uint8))
-                img_tensor = preprocess(dummy_img).unsqueeze(0)
-                if ml_repo.device == "cuda":
-                    img_tensor = img_tensor.cuda()
-                features = clip_model.encode_image(img_tensor)
-                assert features is not None
-            logger.info("✅ CLIP model validated")
+            # Test YOLOE model
+            logger.info("Testing YOLOE-26n model...")
             
-            # Test YOLO model
-            logger.info("Testing YOLO model...")
-            yolo_model = ml_repo.get_yolo_model()
+            # Ensure MobileCLIP is available in CWD (symlink from cache if needed)
+            mobileclip_name = "mobileclip2_b.ts"
+            mobileclip_cache = cache_path / mobileclip_name
+            mobileclip_local = Path(mobileclip_name)
+            
+            if mobileclip_cache.exists() and not mobileclip_local.exists():
+                logger.info(f"Symlinking {mobileclip_name} for validation...")
+                mobileclip_local.symlink_to(mobileclip_cache)
+            
+            yolo_model = ml_repo.get_yoloe_model()
+            
+            # Pre-load text encoder to avoid runtime download
+            from src.engines.guardrail.yoloe_classes import GUARDRAIL_CLASSES
+            logger.info("Pre-loading YOLOE text encoder (CLIP)...")
+            yolo_model.get_text_pe(GUARDRAIL_CLASSES)
+            
             dummy_img = np.zeros((640, 640, 3), dtype=np.uint8)
             results = yolo_model(dummy_img, verbose=False)
             assert results is not None
-            logger.info("✅ YOLO model validated")
+            logger.info("✅ YOLOE-26n model and text encoder validated")
             
             logger.info("✅ All models validated successfully")
             
@@ -221,8 +219,8 @@ def setup_models(
     logger.info(f"Cache size: {total_size / (1024 * 1024):.1f}MB")
     logger.info(f"Files cached: {file_count}")
     logger.info(f"Device: {ml_repo.device}")
-    logger.info(f"CLIP variant: {stats.get('clip_variant', 'unknown')}")
-    logger.info(f"YOLO variant: {stats.get('yolo_variant', 'unknown')}")
+    logger.info(f"YOLOE variant: {stats.get('yoloe_variant', 'unknown')}")
+    logger.info(f"YOLOE classes: {stats.get('yoloe_classes_configured', False)}")
     logger.info(f"Model config: {stats.get('config', {})}")
     logger.info("=" * 60)
     

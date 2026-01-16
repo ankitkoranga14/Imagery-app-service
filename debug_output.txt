@@ -1,0 +1,71 @@
+INFO:src.engines.guardrail.food_guardrail_v3:[FoodGuardrailV3] Initializing with YOLOE-26...
+INFO:src.engines.guardrail.food_guardrail_v3:[FoodGuardrailV3] Loading model: yoloe-26n-seg.pt
+INFO:src.engines.guardrail.food_guardrail_v3:[FoodGuardrailV3] Setting 11 semantic classes
+ERROR:src.engines.guardrail.food_guardrail_v3:[FoodGuardrailV3] YOLOE-26 failed to load: PytorchStreamReader failed reading zip archive: failed finding central directory
+ERROR:src.engines.guardrail.food_guardrail_v3:Traceback (most recent call last):
+  File "/home/ankit.koranga/fast/imagery-app-service/src/engines/guardrail/food_guardrail_v3.py", line 1140, in __init__
+    self.model.set_classes(GUARDRAIL_CLASSES_V3, self.model.get_text_pe(GUARDRAIL_CLASSES_V3))
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ankit.koranga/.pyenv/versions/backend/lib/python3.12/site-packages/ultralytics/models/yolo/model.py", line 257, in get_text_pe
+    return self.model.get_text_pe(texts)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ankit.koranga/.pyenv/versions/backend/lib/python3.12/site-packages/torch/utils/_contextlib.py", line 120, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ankit.koranga/.pyenv/versions/backend/lib/python3.12/site-packages/ultralytics/nn/tasks.py", line 1022, in get_text_pe
+    else build_text_model(getattr(self, "text_model", "mobileclip:blt"), device=device)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ankit.koranga/.pyenv/versions/backend/lib/python3.12/site-packages/ultralytics/nn/text_model.py", line 357, in build_text_model
+    return MobileCLIPTS(device, weight="mobileclip2_b.ts")
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ankit.koranga/.pyenv/versions/backend/lib/python3.12/site-packages/ultralytics/nn/text_model.py", line 291, in __init__
+    self.encoder = torch.jit.load(attempt_download_asset(weight), map_location=device)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/ankit.koranga/.pyenv/versions/backend/lib/python3.12/site-packages/torch/jit/_serialization.py", line 168, in load
+    cpp_module = torch._C.import_ir_module(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: PytorchStreamReader failed reading zip archive: failed finding central directory
+
+WARNING:src.engines.guardrail.food_guardrail_v3:[FoodGuardrailV3] Falling back to yolo26n.pt
+YOLO26n summary (fused): 122 layers, 2,408,932 parameters, 0 gradients, 5.4 GFLOPs
+WARNING:src.engines.guardrail.food_guardrail_v3:[FoodGuardrailV3] Using COCO classes (open-vocabulary not available)
+INFO:src.engines.guardrail.food_guardrail_v3:[FoodGuardrailV3] Model loaded: yolo26n.pt
+INFO:src.engines.guardrail.food_guardrail_v3:[FoodGuardrailV3] YOLOE open-vocabulary: False
+INFO:src.engines.guardrail.food_guardrail_v3:[FoodGuardrailV3] CPU threads: 4
+INFO:src.engines.guardrail.food_guardrail_v3:[FoodGuardrailV3] Status=REVIEW | Reason=complex_scene | Physics=87.7ms | Vision=952.6ms | Total=1618.9ms
+INFO:src.engines.guardrail.food_guardrail_v3:[FoodGuardrailV3] Status=REVIEW | Reason=complex_scene | Physics=203.8ms | Vision=2500.1ms | Total=3273.2ms
+INFO:src.engines.guardrail.food_guardrail_v3:[FoodGuardrailV3] Status=REVIEW | Reason=complex_scene | Physics=321.7ms | Vision=4178.8ms | Total=6407.9ms
+INFO:src.engines.guardrail.food_guardrail_v3:[FoodGuardrailV3] Status=REVIEW | Reason=complex_scene | Physics=18.8ms | Vision=387.7ms | Total=427.7ms
+INFO:src.engines.guardrail.food_guardrail_v3:[FoodGuardrailV3] Status=REVIEW | Reason=complex_scene | Physics=12.7ms | Vision=350.3ms | Total=386.5ms
+INFO:src.engines.guardrail.food_guardrail_v3:[FoodGuardrailV3] Status=BLOCK | Reason=no_food | Physics=69.5ms | Vision=378.3ms | Total=642.0ms
+Image ID                                                     | GT     | V3.1   | Reason
+------------------------------------------------------------------------------------------------------------------------
+170203151709-jambalaya.jpg                                   | PASS   | REVIEW | complex_scene: High density scene (density=1.94), requires manual review
+  > Detections: [('unknown', 0.92), ('unknown', 0.57)]
+  > Vision: 0 SAHI dets
+  > Logic: 0 clusters, {'method': 'vessel_hierarchy_v3.1', 'vessel_count': 0, 'meal_count': 0, 'food_count': 0, 'unassigned_food_ignored': 0, 'density': np.float32(1.935448), 'is_complex_scene': np.True_}
+Chicken-Rice-Bowl_EXPS_TOHAM25_25774_P2_MD_04_24_10b.jpg     | BLOCK  | REVIEW | complex_scene: High density scene (density=1.22), requires manual review
+  > Detections: [('unknown', 0.86), ('unknown', 0.79), ('unknown', 0.51)]
+  > Vision: 0 SAHI dets
+  > Logic: 0 clusters, {'method': 'vessel_hierarchy_v3.1', 'vessel_count': 0, 'meal_count': 0, 'food_count': 0, 'unassigned_food_ignored': 0, 'density': np.float32(1.2162933), 'is_complex_scene': np.True_}
+burger.jpeg                                                  | BLOCK  | REVIEW | complex_scene: High density scene (density=0.37), requires manual review
+  > Detections: [('unknown', 0.58), ('unknown', 0.43)]
+  > Vision: 0 SAHI dets
+  > Logic: 0 clusters, {'method': 'vessel_hierarchy_v3.1', 'vessel_count': 0, 'meal_count': 0, 'food_count': 0, 'unassigned_food_ignored': 0, 'density': np.float32(0.36867484), 'is_complex_scene': np.True_}
+carrot-rice-plate-marble-surface.jpg                         | N/A    | BLOCK  | quality_issue_l0_darkness: Too dark for current environment: L_mean=61.6 < 62.0
+  > Vision: 0 SAHI dets
+  > Logic: 0 clusters, {}
+thali.jpeg                                                   | BLOCK  | REVIEW | complex_scene: High density scene (density=0.72), requires manual review
+  > Detections: [('unknown', 0.6), ('unknown', 0.47)]
+  > Vision: 0 SAHI dets
+  > Logic: 0 clusters, {'method': 'vessel_hierarchy_v3.1', 'vessel_count': 0, 'meal_count': 0, 'food_count': 0, 'unassigned_food_ignored': 0, 'density': np.float32(0.7230857), 'is_complex_scene': np.True_}
+blur.jpeg                                                    | BLOCK  | REVIEW | complex_scene: High density scene (density=0.89), requires manual review
+  > Detections: [('unknown', 0.74)]
+  > Vision: 0 SAHI dets
+  > Logic: 0 clusters, {'method': 'vessel_hierarchy_v3.1', 'vessel_count': 0, 'meal_count': 0, 'food_count': 0, 'unassigned_food_ignored': 0, 'density': np.float32(0.8923433), 'is_complex_scene': np.True_}
+multiple.jpg                                                 | N/A    | BLOCK  | quality_issue_l1_glare: Glare detected
+  > Vision: 0 SAHI dets
+  > Logic: 0 clusters, {}
+fires.jpg                                                    | BLOCK  | BLOCK  | no_food: No valid food items detected
+  > Vision: 0 SAHI dets
+  > Logic: 0 clusters, {'method': 'vessel_hierarchy_v3.1'}

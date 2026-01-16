@@ -1,0 +1,472 @@
+{
+    "ground_truth": [
+        {
+            "image_id": "burger.jpeg",
+            "ground_truth_decision": "BLOCK",
+            "your_analysis": {
+                "multiple_food_items": {
+                    "detected": true,
+                    "reasoning": "Image shows burger AND fries as separate items (combo meal)",
+                    "confidence": 95,
+                    "should_block": true
+                },
+                "darkness": {
+                    "detected": false,
+                    "reasoning": "Well lit",
+                    "confidence": 90,
+                    "should_block": false
+                },
+                "glare": {
+                    "detected": false,
+                    "reasoning": "No glare",
+                    "confidence": 88,
+                    "should_block": false
+                },
+                "angle": {
+                    "detected": false,
+                    "reasoning": "Natural angle",
+                    "confidence": 92,
+                    "should_block": false
+                },
+                "foreign_objects": {
+                    "detected": false,
+                    "reasoning": "None",
+                    "confidence": 85,
+                    "should_block": false
+                }
+            },
+            "primary_violation": "multiple_food_items",
+            "overall_decision": "BLOCK",
+            "reasoning_summary": "Image contains multiple distinct food items (burger and fries), violating single-item policy"
+        },
+        {
+            "image_id": "thali.jpeg",
+            "ground_truth_decision": "BLOCK",
+            "your_analysis": {
+                "multiple_food_items": {
+                    "detected": true,
+                    "reasoning": "Thali platter with multiple distinct dishes",
+                    "confidence": 98,
+                    "should_block": true
+                },
+                "darkness": {
+                    "detected": false,
+                    "reasoning": "Adequate lighting",
+                    "confidence": 90,
+                    "should_block": false
+                },
+                "glare": {
+                    "detected": false,
+                    "reasoning": "No glare",
+                    "confidence": 88,
+                    "should_block": false
+                },
+                "angle": {
+                    "detected": false,
+                    "reasoning": "Top-down view is acceptable for thali but it's multiple items",
+                    "confidence": 92,
+                    "should_block": false
+                },
+                "foreign_objects": {
+                    "detected": false,
+                    "reasoning": "None",
+                    "confidence": 85,
+                    "should_block": false
+                }
+            },
+            "primary_violation": "multiple_food_items",
+            "overall_decision": "BLOCK",
+            "reasoning_summary": "Image contains multiple distinct food items (Thali platter)"
+        },
+        {
+            "image_id": "170203151709-jambalaya.jpg",
+            "ground_truth_decision": "PASS",
+            "your_analysis": {
+                "multiple_food_items": {
+                    "detected": false,
+                    "reasoning": "Single dish (Jambalaya)",
+                    "confidence": 95,
+                    "should_block": false
+                },
+                "darkness": {
+                    "detected": false,
+                    "reasoning": "Well lit",
+                    "confidence": 90,
+                    "should_block": false
+                },
+                "glare": {
+                    "detected": false,
+                    "reasoning": "No glare",
+                    "confidence": 88,
+                    "should_block": false
+                },
+                "angle": {
+                    "detected": false,
+                    "reasoning": "Good angle",
+                    "confidence": 92,
+                    "should_block": false
+                },
+                "foreign_objects": {
+                    "detected": false,
+                    "reasoning": "None",
+                    "confidence": 85,
+                    "should_block": false
+                }
+            },
+            "primary_violation": null,
+            "overall_decision": "PASS",
+            "reasoning_summary": "Single food item, well presented"
+        },
+        {
+            "image_id": "fires.jpg",
+            "ground_truth_decision": "BLOCK",
+            "your_analysis": {
+                "multiple_food_items": {
+                    "detected": false,
+                    "reasoning": "Single item (fries)",
+                    "confidence": 90,
+                    "should_block": false
+                },
+                "darkness": {
+                    "detected": false,
+                    "reasoning": "Adequate",
+                    "confidence": 85,
+                    "should_block": false
+                },
+                "glare": {
+                    "detected": false,
+                    "reasoning": "No glare",
+                    "confidence": 88,
+                    "should_block": false
+                },
+                "angle": {
+                    "detected": false,
+                    "reasoning": "Top-down",
+                    "confidence": 90,
+                    "should_block": false
+                },
+                "foreign_objects": {
+                    "detected": true,
+                    "reasoning": "Packaging/wrappers visible in background",
+                    "confidence": 95,
+                    "should_block": true
+                }
+            },
+            "primary_violation": "foreign_objects",
+            "overall_decision": "BLOCK",
+            "reasoning_summary": "Packaging/wrappers visible in frame"
+        },
+        {
+            "image_id": "unnamed.jpg",
+            "ground_truth_decision": "BLOCK",
+            "your_analysis": {
+                "multiple_food_items": {
+                    "detected": false,
+                    "reasoning": "Not food",
+                    "confidence": 100,
+                    "should_block": false
+                },
+                "darkness": {
+                    "detected": false,
+                    "reasoning": "N/A",
+                    "confidence": 100,
+                    "should_block": false
+                },
+                "glare": {
+                    "detected": false,
+                    "reasoning": "N/A",
+                    "confidence": 100,
+                    "should_block": false
+                },
+                "angle": {
+                    "detected": false,
+                    "reasoning": "N/A",
+                    "confidence": 100,
+                    "should_block": false
+                },
+                "foreign_objects": {
+                    "detected": true,
+                    "reasoning": "Image is not food, contains text and graphics",
+                    "confidence": 100,
+                    "should_block": true
+                }
+            },
+            "primary_violation": "foreign_objects",
+            "overall_decision": "BLOCK",
+            "reasoning_summary": "Not a food image"
+        },
+        {
+            "image_id": "Native-Foods-3.jpg",
+            "ground_truth_decision": "PASS",
+            "your_analysis": {
+                "multiple_food_items": {
+                    "detected": false,
+                    "reasoning": "Single item",
+                    "confidence": 95,
+                    "should_block": false
+                },
+                "darkness": {
+                    "detected": false,
+                    "reasoning": "Well lit",
+                    "confidence": 90,
+                    "should_block": false
+                },
+                "glare": {
+                    "detected": false,
+                    "reasoning": "No glare",
+                    "confidence": 88,
+                    "should_block": false
+                },
+                "angle": {
+                    "detected": false,
+                    "reasoning": "Good angle",
+                    "confidence": 92,
+                    "should_block": false
+                },
+                "foreign_objects": {
+                    "detected": false,
+                    "reasoning": "None",
+                    "confidence": 85,
+                    "should_block": false
+                }
+            },
+            "primary_violation": null,
+            "overall_decision": "PASS",
+            "reasoning_summary": "Single food item, well presented"
+        },
+        {
+            "image_id": "Chicken-Rice-Bowl_EXPS_TOHAM25_25774_P2_MD_04_24_10b.jpg",
+            "ground_truth_decision": "BLOCK",
+            "your_analysis": {
+                "multiple_food_items": {
+                    "detected": false,
+                    "reasoning": "Single dish",
+                    "confidence": 95,
+                    "should_block": false
+                },
+                "darkness": {
+                    "detected": false,
+                    "reasoning": "Well lit",
+                    "confidence": 90,
+                    "should_block": false
+                },
+                "glare": {
+                    "detected": false,
+                    "reasoning": "No glare",
+                    "confidence": 88,
+                    "should_block": false
+                },
+                "angle": {
+                    "detected": false,
+                    "reasoning": "Good angle",
+                    "confidence": 92,
+                    "should_block": false
+                },
+                "foreign_objects": {
+                    "detected": true,
+                    "reasoning": "Utensil (fork) in the bowl",
+                    "confidence": 90,
+                    "should_block": true
+                }
+            },
+            "primary_violation": "foreign_objects",
+            "overall_decision": "BLOCK",
+            "reasoning_summary": "Utensil present in the bowl"
+        },
+        {
+            "image_id": "salad-bowl-slices-tomato-spinach-600nw-2344224543.webp",
+            "ground_truth_decision": "BLOCK",
+            "your_analysis": {
+                "multiple_food_items": {
+                    "detected": false,
+                    "reasoning": "Single dish",
+                    "confidence": 95,
+                    "should_block": false
+                },
+                "darkness": {
+                    "detected": false,
+                    "reasoning": "Well lit",
+                    "confidence": 90,
+                    "should_block": false
+                },
+                "glare": {
+                    "detected": true,
+                    "reasoning": "Glare on the plastic lid",
+                    "confidence": 80,
+                    "should_block": true
+                },
+                "angle": {
+                    "detected": false,
+                    "reasoning": "Good angle",
+                    "confidence": 92,
+                    "should_block": false
+                },
+                "foreign_objects": {
+                    "detected": true,
+                    "reasoning": "Packaging (plastic lid) present",
+                    "confidence": 95,
+                    "should_block": true
+                }
+            },
+            "primary_violation": "foreign_objects",
+            "overall_decision": "BLOCK",
+            "reasoning_summary": "Packaging and glare present"
+        },
+        {
+            "image_id": "istockphoto-542180758-612x612.jpg",
+            "ground_truth_decision": "PASS",
+            "your_analysis": {
+                "multiple_food_items": {
+                    "detected": false,
+                    "reasoning": "Single dish",
+                    "confidence": 95,
+                    "should_block": false
+                },
+                "darkness": {
+                    "detected": false,
+                    "reasoning": "Well lit",
+                    "confidence": 90,
+                    "should_block": false
+                },
+                "glare": {
+                    "detected": false,
+                    "reasoning": "No glare",
+                    "confidence": 88,
+                    "should_block": false
+                },
+                "angle": {
+                    "detected": false,
+                    "reasoning": "Top-down but professional",
+                    "confidence": 92,
+                    "should_block": false
+                },
+                "foreign_objects": {
+                    "detected": false,
+                    "reasoning": "None",
+                    "confidence": 85,
+                    "should_block": false
+                }
+            },
+            "primary_violation": null,
+            "overall_decision": "PASS",
+            "reasoning_summary": "Single food item, professional presentation"
+        },
+        {
+            "image_id": "mult.webp",
+            "ground_truth_decision": "BLOCK",
+            "your_analysis": {
+                "multiple_food_items": {
+                    "detected": true,
+                    "reasoning": "Multiple distinct dishes on the table",
+                    "confidence": 100,
+                    "should_block": true
+                },
+                "darkness": {
+                    "detected": false,
+                    "reasoning": "Well lit",
+                    "confidence": 90,
+                    "should_block": false
+                },
+                "glare": {
+                    "detected": false,
+                    "reasoning": "No glare",
+                    "confidence": 88,
+                    "should_block": false
+                },
+                "angle": {
+                    "detected": false,
+                    "reasoning": "Top-down",
+                    "confidence": 92,
+                    "should_block": false
+                },
+                "foreign_objects": {
+                    "detected": false,
+                    "reasoning": "None",
+                    "confidence": 85,
+                    "should_block": false
+                }
+            },
+            "primary_violation": "multiple_food_items",
+            "overall_decision": "BLOCK",
+            "reasoning_summary": "Multiple distinct food items present"
+        },
+        {
+            "image_id": "blur.jpeg",
+            "ground_truth_decision": "BLOCK",
+            "your_analysis": {
+                "multiple_food_items": {
+                    "detected": false,
+                    "reasoning": "Single salad",
+                    "confidence": 90,
+                    "should_block": false
+                },
+                "darkness": {
+                    "detected": false,
+                    "reasoning": "Bright enough",
+                    "confidence": 85,
+                    "should_block": false
+                },
+                "glare": {
+                    "detected": true,
+                    "reasoning": "Severe glare and overexposure",
+                    "confidence": 95,
+                    "should_block": true
+                },
+                "angle": {
+                    "detected": false,
+                    "reasoning": "Acceptable",
+                    "confidence": 90,
+                    "should_block": false
+                },
+                "foreign_objects": {
+                    "detected": true,
+                    "reasoning": "Utensils in use/held",
+                    "confidence": 80,
+                    "should_block": true
+                }
+            },
+            "primary_violation": "glare",
+            "overall_decision": "BLOCK",
+            "reasoning_summary": "Severe glare and utensils in use"
+        },
+        {
+            "image_id": "dining-table-set-traditional-meal-various-dishes-laid-out-multiple-featuring-fresh-vegetables-eggs-407804556.webp",
+            "ground_truth_decision": "BLOCK",
+            "your_analysis": {
+                "multiple_food_items": {
+                    "detected": true,
+                    "reasoning": "Many distinct dishes on the table",
+                    "confidence": 100,
+                    "should_block": true
+                },
+                "darkness": {
+                    "detected": false,
+                    "reasoning": "Well lit",
+                    "confidence": 95,
+                    "should_block": false
+                },
+                "glare": {
+                    "detected": false,
+                    "reasoning": "No glare",
+                    "confidence": 90,
+                    "should_block": false
+                },
+                "angle": {
+                    "detected": false,
+                    "reasoning": "Good angle",
+                    "confidence": 92,
+                    "should_block": false
+                },
+                "foreign_objects": {
+                    "detected": true,
+                    "reasoning": "Utensils, glasses, empty plates visible",
+                    "confidence": 85,
+                    "should_block": true
+                }
+            },
+            "primary_violation": "multiple_food_items",
+            "overall_decision": "BLOCK",
+            "reasoning_summary": "Multiple food items and foreign objects present"
+        }
+    ]
+}
