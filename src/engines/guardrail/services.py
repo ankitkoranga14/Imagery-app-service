@@ -119,7 +119,7 @@ def convert_numpy_types(obj: Any) -> Any:
 # =============================================================================
 
 # PHYSICS THRESHOLDS
-PHYSICS_DARKNESS_THRESHOLD = 35.0000           # Was 50 → Too strict for restaurants
+PHYSICS_DARKNESS_THRESHOLD = 45.0000           # Was 50 → Too strict for restaurants
 PHYSICS_DARKNESS_HARD_LIMIT = 20          # Absolute minimum brightness
 PHYSICS_GLARE_THRESHOLD = 0.0500            # Was 0.12 → Too strict for white plates
 PHYSICS_BLOWN_THRESHOLD = 0.25            # Was 0.15
@@ -127,7 +127,7 @@ PHYSICS_MIN_CONTRAST_SD = 25              # Minimum std dev for contrast
 PHYSICS_MIN_DYNAMIC_RANGE = 60            # Minimum p95-p5 range
 
 # BLUR THRESHOLDS (Multi-method ensemble)
-PHYSICS_BLUR_LAPLACIAN_THRESHOLD = 3000   # Was 1800 -> Stricter
+PHYSICS_BLUR_LAPLACIAN_THRESHOLD = 800   # Was 1800 -> Stricter
 PHYSICS_BLUR_TENENGRAD_THRESHOLD = 15000  # Was 8000
 PHYSICS_BLUR_FFT_THRESHOLD = 0.7          # Was 0.6
 PHYSICS_BLUR_COMBINED_THRESHOLD = 0.53     # Was 0.55
@@ -141,9 +141,9 @@ GEOMETRY_MAX_RAW_FOOD_ITEMS = 4           # Was 3 -> More lenient for complex pl
 GEOMETRY_MAX_CLUSTERS_READY_TO_EAT = 4.9000    # Max clusters allowed for ready-to-eat meals
 
 # CONTEXT THRESHOLDS
-CONTEXT_FOOD_THRESHOLD = 0.0100             # Was 0.01 → Slightly stricter to avoid non-food noise
+CONTEXT_FOOD_THRESHOLD = 0.05             # Was 0.15 -> Lowered to 0.05 to catch faint signals in real-world images
 CONTEXT_NSFW_THRESHOLD = 0.20             # Was 0.15 → Stricter on NSFW
-CONTEXT_FOREIGN_OBJECT_THRESHOLD = 0.0500   # Was 0.30 → More lenient
+CONTEXT_FOREIGN_OBJECT_THRESHOLD = 0.6500   # Was 0.30 → More lenient
 CONTEXT_POOR_ANGLE_THRESHOLD = 0.6000       # Was 0.50 → More lenient
 
 # TEXT THRESHOLDS

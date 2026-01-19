@@ -30,7 +30,7 @@ class GuardrailClassCategory(str, Enum):
 # =============================================================================
 
 # Zero-tolerance threshold - any detection above this triggers BLOCK
-V3_FOREIGN_OBJECT_THRESHOLD = 0.42
+V3_FOREIGN_OBJECT_THRESHOLD = 0.65
 
 # Zero-tolerance foreign object classes (immediate BLOCK if detected)
 V3_FOREIGN_OBJECT_CLASSES: Set[str] = {
@@ -52,7 +52,7 @@ V3_FOREIGN_OBJECT_CLASSES: Set[str] = {
 # =============================================================================
 
 # L0: Darkness (LAB L-Channel) - Target: 99.2% Precision
-V3_DARKNESS_LAB_L_THRESHOLD = 62  # L_mean > 62
+V3_DARKNESS_LAB_L_THRESHOLD = 45  # L_mean > 45
 V3_DARKNESS_HARD_LIMIT = 25       # Absolute minimum
 
 # L1: Glare (HSV Saturation/Value) - Target: 98.1% Recall
@@ -119,7 +119,7 @@ CLASS_CATEGORIES: Dict[str, GuardrailClassCategory] = {
 # SAFETY BLOCKING THRESHOLDS
 # =============================================================================
 
-SAFETY_BLOCK_THRESHOLD = 0.45
+SAFETY_BLOCK_THRESHOLD = 0.65
 DEFAULT_CONF_THRESHOLD = 0.05
 
 
@@ -174,13 +174,21 @@ def classify_contextual_state(
         if raw_ingredient_count > ready_to_eat_count:
             return ContextualState.PREP_MODE, "cutlery_knife + raw_ingredient (dominant) = prep_mode"
     
-    # Rule 3: Not Ready to Eat - Raw without plated meal
+    # Rule 3: Not Ready to Eat - Raw without plated meal (UNLESS in a vessel)
     if raw_ingredient_count > 0 and plated_meal_count == 0 and snack_count == 0 and generic_food_count == 0:
-        return ContextualState.NOT_READY, "raw_ingredient present, no plated_meal/snack"
+        # If raw food is in a vessel (e.g. salad bowl, roast tray), accept it
+        if vessel_count > 0:
+            return ContextualState.READY_TO_EAT, "raw_ingredient in vessel (salad/roast)"
+        else:
+            return ContextualState.NOT_READY, "raw_ingredient present, no plated_meal/snack/vessel"
     
     # Rule 4: Packaged Food
-    if packaging_count > 0 and plated_meal_count == 0 and snack_count == 0 and generic_food_count == 0:
-        return ContextualState.PACKAGED, "packaging_plastic without plated_meal/snack"
+    # Block if packaging is present and either no food is detected OR packaging dominates
+    if packaging_count > 0:
+        if ready_to_eat_count == 0:
+            return ContextualState.PACKAGED, "packaging_plastic without plated_meal/snack"
+        elif packaging_count > ready_to_eat_count:
+            return ContextualState.PACKAGED, "packaging_plastic dominates ready-to-eat items"
     
     # Rule 5: Ready to Eat - Plated meal, snack, beverage, or generic food
     ready_to_eat_count = plated_meal_count + snack_count + beverage_count + generic_food_count
@@ -189,6 +197,10 @@ def classify_contextual_state(
             return ContextualState.READY_TO_EAT, "food/drink within vessel_bowl_plate cluster"
         else:
             return ContextualState.READY_TO_EAT, "food/drink detected"
+    
+    # Rule 6: Vessel Only (Fallback for low confidence food)
+    if vessel_count > 0:
+        return ContextualState.READY_TO_EAT, "vessel detected, assuming food content (low confidence)"
     
     # Default: Unknown state
     return ContextualState.UNKNOWN, "no clear food pattern detected"

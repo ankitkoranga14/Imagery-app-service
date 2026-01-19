@@ -38,19 +38,19 @@ logger = logging.getLogger(__name__)
 
 # L0: Darkness (LAB L-Channel)
 # Target: 99.2% Precision - Calibrated for kitchen steam and under-counter conditions
-V3_DARKNESS_LAB_L_THRESHOLD = 62  # L_mean > 62 (Industry Standard)
+V3_DARKNESS_LAB_L_THRESHOLD = 45  # L_mean > 45 (Relaxed from 62)
 V3_DARKNESS_HARD_LIMIT = 25       # Absolute minimum L-channel value
 
 # L1: Glare (HSV Saturation/Value)
 # Target: 98.1% Recall - Detect dead zones from stainless steel/LEDs
-V3_GLARE_VALUE_STD_THRESHOLD = 82       # Fail if V std > 82
-V3_GLARE_SATURATION_HIGH_RATIO = 0.07   # AND saturation >245 pixels > 7%
+V3_GLARE_VALUE_STD_THRESHOLD = 90       # Fail if V std > 90 (Relaxed from 82)
+V3_GLARE_SATURATION_HIGH_RATIO = 0.20   # AND saturation >245 pixels > 20% (Relaxed from 7%)
 V3_GLARE_SATURATION_HIGH_VALUE = 245    # High saturation threshold
 
 # L2: Blur (Existing multi-method, enhanced)
-V3_BLUR_LAPLACIAN_MIN = 3000      # Minimum Laplacian variance (Stricter, relying on center crop)
-V3_BLUR_COMBINED_MAX = 0.53       # Maximum combined blur score (Stricter, relying on peak bonus)
-V3_BLUR_HARD_LIMIT = 500          # Absolute minimum Laplacian variance (Stricter) (Lowered from 600)
+V3_BLUR_LAPLACIAN_MIN = 800       # Minimum Laplacian variance (Relaxed from 3000)
+V3_BLUR_COMBINED_MAX = 0.53       # Maximum combined blur score
+V3_BLUR_HARD_LIMIT = 100          # Absolute minimum Laplacian variance (Relaxed from 500)
 
 # L2.5: Angle Detection (Hough Transform)
 # Target: 96.8% Accuracy - Ensure top-down or slight isometric (<45° deviation)
@@ -67,11 +67,11 @@ V3_ANGLE_MAX_LINE_GAP = 10        # Maximum line gap
 
 # Vessel-Based Clustering (Fixes Bowl-Tray Merging)
 V3_VESSEL_ROI_BUFFER = 6          # 6px buffer around vessel bounding box
-V3_VESSEL_FOOD_IOU_THRESHOLD = 0.25  # Food must have IoU > 0.25 with vessel
+V3_VESSEL_FOOD_IOU_THRESHOLD = 0.15  # Food must have IoU > 0.15 with vessel (Relaxed from 0.25)
 V3_DENSITY_THRESHOLD = 0.32       # Flag for "Complex Scene" review
 
 # Zero-Tolerance Foreign Objects
-V3_FOREIGN_OBJECT_THRESHOLD = 0.42  # Confidence > 0.42 triggers BLOCK
+V3_FOREIGN_OBJECT_THRESHOLD = 0.65  # Confidence > 0.65 triggers BLOCK (Relaxed from 0.42)
 V3_FOREIGN_OBJECT_CLASSES = [
     'human hand',
     'human arm',
@@ -1321,7 +1321,8 @@ class FoodGuardrailV3:
             img_height, img_width = img_bgr.shape[:2]
             
             # 2. PHYSICS VALIDATION
-            physics_result = self.check_physics(img_bgr)
+            # V3.1 Fix: Run physics on RAW image to avoid artifacts from signal cleaning
+            physics_result = self.check_physics(img_raw)
             if not physics_result["passed"]:
                 return {
                     "status": "BLOCK",
