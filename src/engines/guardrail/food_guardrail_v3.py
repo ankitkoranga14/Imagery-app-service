@@ -48,9 +48,9 @@ V3_GLARE_SATURATION_HIGH_RATIO = 0.20   # AND saturation >245 pixels > 20% (Rela
 V3_GLARE_SATURATION_HIGH_VALUE = 245    # High saturation threshold
 
 # L2: Blur (Existing multi-method, enhanced)
-V3_BLUR_LAPLACIAN_MIN = 800       # Minimum Laplacian variance (Relaxed from 3000)
-V3_BLUR_COMBINED_MAX = 0.53       # Maximum combined blur score
-V3_BLUR_HARD_LIMIT = 100          # Absolute minimum Laplacian variance (Relaxed from 500)
+V3_BLUR_LAPLACIAN_MIN = 50        # Minimum Laplacian variance (Relaxed from 800)
+V3_BLUR_COMBINED_MAX = 0.85       # Maximum combined blur score (Relaxed from 0.53)
+V3_BLUR_HARD_LIMIT = 10           # Absolute minimum Laplacian variance
 
 # L2.5: Angle Detection (Hough Transform)
 # Target: 96.8% Accuracy - Ensure top-down or slight isometric (<45° deviation)

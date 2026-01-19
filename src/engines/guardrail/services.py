@@ -127,18 +127,18 @@ PHYSICS_MIN_CONTRAST_SD = 25              # Minimum std dev for contrast
 PHYSICS_MIN_DYNAMIC_RANGE = 60            # Minimum p95-p5 range
 
 # BLUR THRESHOLDS (Multi-method ensemble)
-PHYSICS_BLUR_LAPLACIAN_THRESHOLD = 800   # Was 1800 -> Stricter
-PHYSICS_BLUR_TENENGRAD_THRESHOLD = 15000  # Was 8000
-PHYSICS_BLUR_FFT_THRESHOLD = 0.7          # Was 0.6
-PHYSICS_BLUR_COMBINED_THRESHOLD = 0.53     # Was 0.55
+PHYSICS_BLUR_LAPLACIAN_THRESHOLD = 50    # Was 800 -> Relaxed for soft focus
+PHYSICS_BLUR_TENENGRAD_THRESHOLD = 5000   # Was 15000
+PHYSICS_BLUR_FFT_THRESHOLD = 0.85         # Was 0.7
+PHYSICS_BLUR_COMBINED_THRESHOLD = 0.85    # Was 0.53 -> Relaxed significantly
 PHYSICS_BLUR_DOWNSAMPLE_SIZE = 512        # Max dimension for blur analysis (for speed)
 
 # GEOMETRY THRESHOLDS
-GEOMETRY_PROXIMITY_THRESHOLD = 0.10       # Was 0.05 -> Increased to cluster food + plate better
+GEOMETRY_PROXIMITY_THRESHOLD = 0.15       # Was 0.10 -> Increased to cluster better
 GEOMETRY_MIN_MAIN_DISHES = 2              # Keep - main dishes to trigger block
 GEOMETRY_MIN_ANY_DISHES = 3               # Was 2 -> More lenient for side dishes
-GEOMETRY_MAX_RAW_FOOD_ITEMS = 4           # Was 3 -> More lenient for complex plates
-GEOMETRY_MAX_CLUSTERS_READY_TO_EAT = 4.9000    # Max clusters allowed for ready-to-eat meals
+GEOMETRY_MAX_RAW_FOOD_ITEMS = 6           # Was 4 -> More lenient
+GEOMETRY_MAX_CLUSTERS_READY_TO_EAT = 8.0  # Was 4.9 -> Relaxed for tapas/bento/messy tables
 
 # CONTEXT THRESHOLDS
 CONTEXT_FOOD_THRESHOLD = 0.05             # Was 0.15 -> Lowered to 0.05 to catch faint signals in real-world images
