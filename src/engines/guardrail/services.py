@@ -127,10 +127,10 @@ PHYSICS_MIN_CONTRAST_SD = 25              # Minimum std dev for contrast
 PHYSICS_MIN_DYNAMIC_RANGE = 60            # Minimum p95-p5 range
 
 # BLUR THRESHOLDS (Multi-method ensemble)
-PHYSICS_BLUR_LAPLACIAN_THRESHOLD = 50    # Was 800 -> Relaxed for soft focus
-PHYSICS_BLUR_TENENGRAD_THRESHOLD = 5000   # Was 15000
-PHYSICS_BLUR_FFT_THRESHOLD = 0.85         # Was 0.7
-PHYSICS_BLUR_COMBINED_THRESHOLD = 0.85    # Was 0.53 -> Relaxed significantly
+PHYSICS_BLUR_LAPLACIAN_THRESHOLD = 120    # Increased from 50
+PHYSICS_BLUR_TENENGRAD_THRESHOLD = 10000   # Standardized
+PHYSICS_BLUR_FFT_THRESHOLD = 0.7         # Standardized
+PHYSICS_BLUR_COMBINED_THRESHOLD = 0.75    # Decreased from 0.85
 PHYSICS_BLUR_DOWNSAMPLE_SIZE = 512        # Max dimension for blur analysis (for speed)
 
 # GEOMETRY THRESHOLDS

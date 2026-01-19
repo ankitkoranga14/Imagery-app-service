@@ -48,9 +48,9 @@ V3_GLARE_SATURATION_HIGH_RATIO = 0.20   # AND saturation >245 pixels > 20% (Rela
 V3_GLARE_SATURATION_HIGH_VALUE = 245    # High saturation threshold
 
 # L2: Blur (Existing multi-method, enhanced)
-V3_BLUR_LAPLACIAN_MIN = 50        # Minimum Laplacian variance (Relaxed from 800)
-V3_BLUR_COMBINED_MAX = 0.85       # Maximum combined blur score (Relaxed from 0.53)
-V3_BLUR_HARD_LIMIT = 10           # Absolute minimum Laplacian variance
+V3_BLUR_LAPLACIAN_MIN = 120       # Minimum Laplacian variance (Increased from 50)
+V3_BLUR_COMBINED_MAX = 0.75       # Maximum combined blur score (Decreased from 0.85)
+V3_BLUR_HARD_LIMIT = 15           # Absolute minimum Laplacian variance (Increased from 10)
 
 # L2.5: Angle Detection (Hough Transform)
 # Target: 96.8% Accuracy - Ensure top-down or slight isometric (<45° deviation)
@@ -960,12 +960,16 @@ class PhysicsGatesV3:
             new_h = int(gray.shape[0] * scale)
             gray = cv2.resize(gray, (new_w, new_h), interpolation=cv2.INTER_AREA)
         
-        # Laplacian variance (Global)
-        laplacian = cv2.Laplacian(gray, cv2.CV_64F)
+        # V3.1.1 Fix: Use inner crop to avoid watermarks/UI elements at edges
+        h, w = gray.shape
+        mh, mw = h // 10, w // 10
+        inner_gray = gray[mh:h-mh, mw:w-mw]
+        
+        # Laplacian variance (Global - now Inner)
+        laplacian = cv2.Laplacian(inner_gray, cv2.CV_64F)
         global_lap_var = float(laplacian.var())
 
         # Laplacian variance (Center 50% Crop) - To handle bokeh/depth-of-field
-        h, w = gray.shape
         ch, cw = h // 2, w // 2
         h_start, w_start = h // 4, w // 4
         center_crop = gray[h_start:h_start+ch, w_start:w_start+cw]
@@ -986,13 +990,13 @@ class PhysicsGatesV3:
             }
             return False, f"Image severely blurred: variance={lap_var:.1f} < {V3_BLUR_HARD_LIMIT}", metrics
         
-        # Tenengrad (Sobel)
-        gx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)
-        gy = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=3)
+        # Tenengrad (Sobel) - Also use inner crop
+        gx = cv2.Sobel(inner_gray, cv2.CV_64F, 1, 0, ksize=3)
+        gy = cv2.Sobel(inner_gray, cv2.CV_64F, 0, 1, ksize=3)
         tenengrad = float(np.mean(gx**2 + gy**2))
         
-        # FFT high-frequency ratio
-        fft = np.fft.fft2(gray.astype(np.float32))
+        # FFT high-frequency ratio - Also use inner crop
+        fft = np.fft.fft2(inner_gray.astype(np.float32))
         fft_shift = np.fft.fftshift(fft)
         magnitude = np.abs(fft_shift)
         magnitude = np.maximum(magnitude, 1e-10)

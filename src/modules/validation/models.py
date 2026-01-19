@@ -127,7 +127,7 @@ class ValidationJob(SQLModel, table=True):
     result_status: Optional[str] = Field(default=None, description="PASS or BLOCK")
     result_reason: Optional[str] = Field(default=None)
     result_scores: Dict[str, Any] = Field(default={}, sa_column=Column(JSON))
-    result_latency_ms: Optional[int] = Field(default=None)
+    result_latency_ms: Optional[int] = Field(default=None)g
     
     # Error tracking
     error_message: Optional[str] = Field(default=None)
