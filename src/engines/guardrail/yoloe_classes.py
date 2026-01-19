@@ -166,9 +166,13 @@ def classify_contextual_state(
     if spoilage_count > 0 and spoilage_conf > SAFETY_BLOCK_THRESHOLD:
         return ContextualState.SAFETY_RISK, f"spoilage_mold detected (conf={spoilage_conf:.2f})"
     
-    # Rule 2: Prep Mode - Knife near raw ingredients
+    # Rule 2: Prep Mode - Knife near raw ingredients (only if raw dominates)
+    ready_to_eat_count = plated_meal_count + snack_count + beverage_count + generic_food_count
     if knife_count > 0 and raw_ingredient_count > 0:
-        return ContextualState.PREP_MODE, "cutlery_knife + raw_ingredient = prep_mode"
+        # Only block as prep mode if raw ingredients outnumber ready-to-eat items
+        # This allows scenes like "steak with knife" or "onion rings on board" to pass
+        if raw_ingredient_count > ready_to_eat_count:
+            return ContextualState.PREP_MODE, "cutlery_knife + raw_ingredient (dominant) = prep_mode"
     
     # Rule 3: Not Ready to Eat - Raw without plated meal
     if raw_ingredient_count > 0 and plated_meal_count == 0 and snack_count == 0 and generic_food_count == 0:

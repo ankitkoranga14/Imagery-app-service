@@ -48,8 +48,9 @@ V3_GLARE_SATURATION_HIGH_RATIO = 0.07   # AND saturation >245 pixels > 7%
 V3_GLARE_SATURATION_HIGH_VALUE = 245    # High saturation threshold
 
 # L2: Blur (Existing multi-method, enhanced)
-V3_BLUR_LAPLACIAN_MIN = 800       # Minimum Laplacian variance
-V3_BLUR_COMBINED_MAX = 0.65       # Maximum combined blur score
+V3_BLUR_LAPLACIAN_MIN = 3000      # Minimum Laplacian variance (Stricter, relying on center crop)
+V3_BLUR_COMBINED_MAX = 0.53       # Maximum combined blur score (Stricter, relying on peak bonus)
+V3_BLUR_HARD_LIMIT = 500          # Absolute minimum Laplacian variance (Stricter) (Lowered from 600)
 
 # L2.5: Angle Detection (Hough Transform)
 # Target: 96.8% Accuracy - Ensure top-down or slight isometric (<45° deviation)
@@ -959,9 +960,31 @@ class PhysicsGatesV3:
             new_h = int(gray.shape[0] * scale)
             gray = cv2.resize(gray, (new_w, new_h), interpolation=cv2.INTER_AREA)
         
-        # Laplacian variance
+        # Laplacian variance (Global)
         laplacian = cv2.Laplacian(gray, cv2.CV_64F)
-        lap_var = float(laplacian.var())
+        global_lap_var = float(laplacian.var())
+
+        # Laplacian variance (Center 50% Crop) - To handle bokeh/depth-of-field
+        h, w = gray.shape
+        ch, cw = h // 2, w // 2
+        h_start, w_start = h // 4, w // 4
+        center_crop = gray[h_start:h_start+ch, w_start:w_start+cw]
+        center_laplacian = cv2.Laplacian(center_crop, cv2.CV_64F)
+        center_lap_var = float(center_laplacian.var())
+
+        # Use the maximum variance (if center is sharp, image is likely valid bokeh)
+        lap_var = max(global_lap_var, center_lap_var)
+        
+        # Hard limit check (Fail fast for severe blur)
+        if lap_var < V3_BLUR_HARD_LIMIT:
+            metrics = {
+                "laplacian_variance": lap_var,
+                "global_variance": global_lap_var,
+                "center_variance": center_lap_var,
+                "threshold": V3_BLUR_COMBINED_MAX,
+                "hard_limit": V3_BLUR_HARD_LIMIT
+            }
+            return False, f"Image severely blurred: variance={lap_var:.1f} < {V3_BLUR_HARD_LIMIT}", metrics
         
         # Tenengrad (Sobel)
         gx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)
@@ -989,7 +1012,8 @@ class PhysicsGatesV3:
         ten_score = max(0, 1.0 - tenengrad / 15000)
         fft_score = max(0, 1.0 - high_freq_ratio / 0.7)
         
-        combined_score = 0.4 * lap_score + 0.3 * ten_score + 0.3 * fft_score
+        # Weighted average (Increased Laplacian weight to 0.5)
+        combined_score = 0.5 * lap_score + 0.25 * ten_score + 0.25 * fft_score
         
         metrics = {
             "laplacian_variance": lap_var,

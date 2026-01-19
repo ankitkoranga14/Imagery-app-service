@@ -46,7 +46,6 @@ services:
       - CLIP_TEMPERATURE=1.2
     command: gunicorn -k uvicorn.workers.UvicornWorker -w 2 --timeout 300 -b 0.0.0.0:8000 src.main:app
     volumes:
-      - ./ml_cache:/app/ml_cache
       - ./data:/app/data
       - ./src:/app/src
       - ./food-guard-ui/dist:/app/food-guard-ui/dist
@@ -82,7 +81,6 @@ services:
       - CLIP_TEMPERATURE=1.2
     command: celery -A src.core.celery_app worker --loglevel=info --concurrency=2 -Q default,validation
     volumes:
-      - ./ml_cache:/app/ml_cache
       - ./data:/app/data
     depends_on:
       redis:
@@ -112,7 +110,6 @@ services:
       - CLIP_TEMPERATURE=1.2
     command: celery -A src.core.celery_app worker --loglevel=info --concurrency=1 -Q gpu_queue,validation
     volumes:
-      - ./ml_cache:/app/ml_cache
       - ./data:/app/data
     depends_on:
       redis:

@@ -65,15 +65,34 @@ async def process_guardrail_stage(
     
     try:
         # Initialize repositories and services (lazy loading)
-        ml_repo = MLRepository()
-        cache_repo = CacheRepository()
-        log_repo = LogRepository()
+        from src.core.config import settings
+        
+        # Use singleton MLRepository to avoid re-downloading models
+        ml_repo = MLRepository.get_instance(settings.ML_MODEL_CACHE_DIR)
+        
+        # Note: CacheRepository and LogRepository require dependencies (Redis, DB Session)
+        # that are not easily available here without a larger refactor.
+        # For now, we initialize them with None/Mock to prevent immediate crashes,
+        # but this stage might need further work to fully support logging/caching.
+        # The primary fix here is for MLRepository downloads.
+        
+        # Mock/Placeholder for now as we focus on ML model loading
+        class MockRepo:
+            async def get(self, *args, **kwargs): return None
+            async def set(self, *args, **kwargs): pass
+            async def save(self, *args, **kwargs): pass
+            async def compute_hash(self, *args, **kwargs): return "hash"
+            
+        cache_repo = MockRepo()
+        log_repo = MockRepo()
+        
         text_service = TextGuardrailService(ml_repo)
         image_service = ImageGuardrailService(ml_repo)
         
         guardrail_service = GuardrailService(
             ml_repo, cache_repo, log_repo, text_service, image_service
         )
+
         
         # Prepare request
         image_b64 = None
